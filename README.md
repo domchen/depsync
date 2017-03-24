@@ -1,7 +1,8 @@
 
-[![npm version](https://badge.fury.io/js/depsync.svg)](https://badge.fury.io/js/depsync) 
-[![TypeScript](https://badges.frapsoft.com/typescript/love/typescript.svg?v=101)](https://github.com/ellerbrock/typescript-badges/)
-[![MIT Licence](https://badges.frapsoft.com/os/mit/mit.svg?v=103)](https://opensource.org/licenses/mit-license.php)   
+[![npm version](https://badge.fury.io/js/depsync.svg)](https://www.npmjs.com/package/depsync) 
+[![Build Status](https://travis-ci.org/domchen/depsync.svg?branch=master)](https://travis-ci.org/domchen/depsync)
+[![MIT Licence](https://badges.frapsoft.com/os/mit/mit.svg?v=103)](https://github.com/domchen/depsync/blob/master/LICENSE)   
+[![TypeScript](https://badges.frapsoft.com/typescript/love/typescript.svg?v=101)](https://github.com/Microsoft/Typescript)
 
 
 # Introduction

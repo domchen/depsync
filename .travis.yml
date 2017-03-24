@@ -1,0 +1,34 @@
+language: node_js
+
+node_js:
+  - 'stable'
+  - '6'
+  - '4'
+
+sudo: false
+
+env:
+  - workerCount=3
+
+matrix:
+  fast_finish: true
+
+branches:
+  only:
+  - master
+
+install:
+  - npm install -g tspack
+  - npm install
+  - npm update
+
+script:
+  - cd src
+  - tspack
+
+cache:
+  directories:
+    - node_modules
+
+notifications:
+  email: false
