@@ -2,7 +2,7 @@
   <a href="https://travis-ci.org/domchen/depsync"><img src="https://img.shields.io/travis/domchen/depsync/master.svg" alt="Build Status"></a>
   <a href="https://www.npmjs.com/package/depsync"><img src="https://img.shields.io/npm/v/depsync.svg" alt="Version"></a>
   <a href="https://github.com/domchen/depsync/blob/master/LICENSE"><img src="https://img.shields.io/npm/l/depsync.svg" alt="License"></a>
-  <a href="https://github.com/Microsoft/Typescript"><img src="https://img.shields.io/badge/code-TypeScript-green.svg" alt="TypeScript"></a>
+  <a href="https://github.com/Microsoft/Typescript"><img src="https://img.shields.io/badge/code-TypeScript-blue.svg" alt="TypeScript"></a>
 </p>
 
 # Introduction
