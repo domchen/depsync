@@ -1,8 +1,8 @@
-<p align="center">
+<p align="left">
   <a href="https://travis-ci.org/domchen/depsync"><img src="https://travis-ci.org/domchen/depsync.svg?branch=master" alt="Build Status"></a>
-  <a href="https://www.npmjs.com/package/depsync"><img src="https://img.shields.io/npm/dt/depsync.svg" alt="Downloads"></a>
   <a href="https://www.npmjs.com/package/depsync"><img src="https://img.shields.io/npm/v/depsync.svg" alt="Version"></a>
   <a href="https://github.com/domchen/depsync/blob/master/LICENSE"><img src="https://img.shields.io/npm/l/depsync.svg" alt="License"></a>
+  <a href="https://github.com/Microsoft/Typescript"><img src="https://badges.frapsoft.com/typescript/love/typescript.svg?v=101" alt="TypeScript"></a>
 </p>
 
 # Introduction
