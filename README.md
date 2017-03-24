@@ -48,7 +48,7 @@ Here is an example of DEPS file:
       },
       {
         "url": "${V8_ROOT}/5.7.492/v8-include.zip",
-        "dir": "third_party/skia",
+        "dir": "third_party/v8",
         "unzip": "true"
       }
     ],
@@ -60,7 +60,7 @@ Here is an example of DEPS file:
       },
       {
         "url": "${V8_ROOT}/5.7.492/v8-darwin-x64.zip",
-        "dir": "third_party/skia",
+        "dir": "third_party/v8",
         "unzip": "true"
       }
     ],
@@ -72,7 +72,7 @@ Here is an example of DEPS file:
       },
       {
         "url": "${V8_ROOT}/5.7.492/v8-win-ia32.zip",
-        "dir": "third_party/skia",
+        "dir": "third_party/v8",
         "unzip": "true"
       }
     ]
