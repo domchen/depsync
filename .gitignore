@@ -1,0 +1,6 @@
+# Build and Release Folders
+/bin-debug
+.settings/
+node_modules
+/test
+.idea/

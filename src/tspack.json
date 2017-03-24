@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "outFile": "../lib/depsync.js",
+    "target": "ES5",
+    "noImplicitAny": false,
+    "preserveConstEnums": true,
+    "sourceMap": false,
+    "skipDefaultLibCheck": true,
+    "stripInternal": true,
+    "accessorOptimization": true,
+    "emitReflection": true,
+    "reorderFiles": true
+  }
+}

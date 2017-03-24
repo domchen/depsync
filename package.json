@@ -1,0 +1,28 @@
+{
+  "name": "depsync",
+  "version": "0.0.2",
+  "author": "Dom Chen",
+  "homepage": "http://www.idom.me/",
+  "description": "Automatically synchronize the dependencies of a project by the DEPS configuration file.",
+  "license": "MIT",
+  "keywords": [
+    "dependency",
+    "synchronize"
+  ],
+  "bugs": {
+    "url": "https://github.com/domchen/depsync/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/domchen/depsync.git"
+  },
+  "bin": {
+    "depsync": "./bin/depsync"
+  },
+  "engines": {
+    "node": ">=0.8.0"
+  },
+  "dependencies": {
+    "progress": "latest"
+  }
+}
