@@ -1,9 +1,9 @@
-
-[![npm version](https://badge.fury.io/js/depsync.svg)](https://www.npmjs.com/package/depsync) 
-[![Build Status](https://travis-ci.org/domchen/depsync.svg?branch=master)](https://travis-ci.org/domchen/depsync)
-[![MIT Licence](https://badges.frapsoft.com/os/mit/mit.svg?v=103)](https://github.com/domchen/depsync/blob/master/LICENSE)   
-[![TypeScript](https://badges.frapsoft.com/typescript/love/typescript.svg?v=101)](https://github.com/Microsoft/Typescript)
-
+<p align="center">
+  <a href="https://travis-ci.org/domchen/depsync"><img src="https://travis-ci.org/domchen/depsync.svg?branch=master" alt="Build Status"></a>
+  <a href="https://www.npmjs.com/package/depsync"><img src="https://img.shields.io/npm/dt/depsync.svg" alt="Downloads"></a>
+  <a href="https://www.npmjs.com/package/depsync"><img src="https://img.shields.io/npm/v/depsync.svg" alt="Version"></a>
+  <a href="https://github.com/domchen/depsync/blob/master/LICENSE"><img src="https://img.shields.io/npm/l/depsync.svg" alt="License"></a>
+</p>
 
 # Introduction
 
