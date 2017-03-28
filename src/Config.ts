@@ -24,12 +24,26 @@
 //
 //////////////////////////////////////////////////////////////////////////////////////
 
-namespace Config {
+interface DEPSData {
+    vars?:Map<string>;
+    files?:{
+        common?:DownloadItem[];
+        mac?:DownloadItem[];
+        win?:DownloadItem[]
+    }
+}
 
-    let fs = require("fs");
-    let path = require("path");
+interface DownloadItem {
+    url:string;
+    dir:string;
+    unzip?:string;
+}
 
-    export function findConfigFile(searchPath:string):string {
+class Config {
+
+    public static findConfigFile(searchPath:string):string {
+        let fs = require("fs");
+        let path = require("path");
         while (true) {
             let fileName = Utils.joinPath(searchPath, "tspack.json");
             if (fs.existsSync(fileName)) {
@@ -48,4 +62,52 @@ namespace Config {
         return "";
     }
 
+    public constructor(data:DEPSData, projectPath:string, platform:string) {
+        this.parse(data, projectPath, platform);
+    }
+
+    public downloads:DownloadItem[];
+
+    private parse(data:DEPSData, projectPath:string, platform:string):void {
+        let path = require("path");
+        let files = data.files;
+        let downloads:DownloadItem[] = [];
+        if (files.common) {
+            for (let item of files.common) {
+                downloads.push(item);
+            }
+        }
+        if (files[platform]) {
+            for (let item of files[platform]) {
+                downloads.push(item);
+            }
+        }
+        for (let item of downloads) {
+            item.url = this.formatString(item.url, data.vars);
+            item.dir = this.formatString(item.dir, data.vars);
+            item.dir = path.join(projectPath, item.dir);
+            if (item.unzip) {
+                item.unzip = this.formatString(item.unzip, data.vars);
+            }
+        }
+    }
+
+    private formatString(text:string, vars:Map<string>):string {
+        let index = text.indexOf("${");
+        while (index != -1) {
+            let prefix = text.substring(0, index);
+            text = text.substring(index);
+            index = text.indexOf("}");
+            if (index == -1) {
+                text = prefix + text;
+                break;
+            }
+            let key = text.substring(2, index);
+            text = text.substring(index + 1);
+            let value = vars[key] ? vars[key] : "${" + key + "}";
+            text = prefix + value + text;
+            index = text.indexOf("${");
+        }
+        return text;
+    }
 }

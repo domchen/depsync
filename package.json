@@ -24,5 +24,9 @@
   },
   "dependencies": {
     "progress": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "^7.0.12",
+    "@types/progress": "^1.1.28"
   }
 }

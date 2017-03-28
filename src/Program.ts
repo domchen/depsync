@@ -24,85 +24,100 @@
 //
 //////////////////////////////////////////////////////////////////////////////////////
 
-let fs = require("fs");
+namespace Program {
 
-const version = "0.0.3";
+    let fs = require("fs");
+    let path = require("path");
+    const CHARSET = "utf-8";
+    const VERSION = "0.0.3";
 
-function run(args:string[]):void {
-    let commandOptions = CommandLine.parse(args);
-    if (commandOptions.errors.length > 0) {
-        console.log(commandOptions.errors.join("\n") + "\n");
-        process.exit(1);
-        return;
-    }
-
-    if (commandOptions.version) {
-        printVersion();
-        process.exit(0);
-    }
-
-    if (commandOptions.help) {
-        printVersion();
-        printHelp();
-        process.exit(0);
-    }
-    let configFileName:string = "";
-    if (commandOptions.project) {
-        if (!commandOptions.project || fs.existsSync(commandOptions.project)) {
-            configFileName = Utils.joinPath(commandOptions.project, "DEPS");
-        }
-        else {
-            configFileName = commandOptions.project;
-        }
-        if (!fs.existsSync(configFileName)) {
-            console.log("Cannot find a DEPS file at the specified directory: " + commandOptions.project + "\n");
+    export function run(args:string[]):void {
+        let commandOptions = CommandLine.parse(args);
+        if (commandOptions.errors.length > 0) {
+            console.log(commandOptions.errors.join("\n") + "\n");
             process.exit(1);
+            return;
         }
-    }
-    else {
-        let searchPath = process.cwd();
-        configFileName = Config.findConfigFile(searchPath);
-        if (!configFileName) {
+
+        if (commandOptions.version) {
+            printVersion();
+            process.exit(0);
+        }
+
+        if (commandOptions.help) {
             printVersion();
             printHelp();
             process.exit(0);
         }
+        let configFileName:string = "";
+        if (commandOptions.project) {
+            if (!commandOptions.project || fs.existsSync(commandOptions.project)) {
+                configFileName = Utils.joinPath(commandOptions.project, "DEPS");
+            }
+            else {
+                configFileName = commandOptions.project;
+            }
+            if (!fs.existsSync(configFileName)) {
+                console.log("Cannot find a DEPS file at the specified directory: " + commandOptions.project + "\n");
+                process.exit(1);
+            }
+        }
+        else {
+            let searchPath = process.cwd();
+            configFileName = Config.findConfigFile(searchPath);
+            if (!configFileName) {
+                printVersion();
+                printHelp();
+                process.exit(0);
+            }
+        }
+
+        let data:DEPSData;
+        try {
+            let jsonText = fs.readFileSync(configFileName, CHARSET);
+            data = JSON.parse(jsonText);
+        } catch (e) {
+            console.log("The DEPS config file is not a JSON file: " + configFileName);
+            process.exit(0);
+        }
+
+        let projectPath = path.dirname(configFileName);
+        let config = new Config(data, projectPath, commandOptions.platform);
+
+        for (let item of config.downloads) {
+
+        }
+
     }
 
-    // let result = Config.parseOptionsFromFile(configFileName);
-    // if (result.errors.length > 0) {
-    //     console.log(result.errors.join("\n")+"\n");
-    //     process.exit(1);
-    // }
+    function printVersion():void {
+        console.log("Version " + VERSION + "\n");
+    }
+
+    function printHelp():void {
+        const newLine = "\n";
+        let output = "";
+        output += "Syntax:   depsync [platform] [options]" + newLine + newLine;
+        output += "Examples: depsync --version" + newLine;
+        output += "Examples: depsync mac" + newLine;
+        output += "Examples: depsync mac --project /usr/local/test/" + newLine + newLine;
+        output += "Options:" + newLine;
+        CommandLine.optionDeclarations.forEach(option => {
+            let name = "";
+            if (option.shortName) {
+                name += "-" + option.shortName + ", ";
+            }
+            name += "--" + option.name;
+            name += makePadding(25 - name.length);
+            output += name + option.description + newLine;
+        });
+        console.log(output);
+    }
+
+    function makePadding(paddingLength:number):string {
+        return Array(paddingLength + 1).join(" ");
+    }
 
 }
 
-function printVersion():void {
-    console.log("Version " + version + "\n");
-}
-
-function printHelp():void {
-    const newLine = "\n";
-    let output = "";
-    output += "Syntax:   depsync [options]" + newLine + newLine;
-    output += "Examples: depsync --version" + newLine;
-    output += "Examples: depsync mac" + newLine;
-    output += "Examples: depsync mac --project /usr/local/test/" + newLine + newLine;
-    output += "Options:" + newLine;
-    CommandLine.optionDeclarations.forEach(option => {
-        let name = "";
-        if (option.shortName) {
-            name += "-" + option.shortName + ", ";
-        }
-        name += "--" + option.name;
-        name += makePadding(25 - name.length);
-        output += name + option.description + newLine;
-    });
-    console.log(output);
-}
-
-function makePadding(paddingLength:number):string {
-    return Array(paddingLength + 1).join(" ");
-}
-
-run(process.argv.slice(1));
+Program.run(process.argv.slice(1));

@@ -25,8 +25,9 @@
 //////////////////////////////////////////////////////////////////////////////////////
 
 
-
 namespace CommandLine {
+    let os = require("os");
+
     export interface OptionDeclaration {
         name:string;
         type:string;
@@ -57,13 +58,10 @@ namespace CommandLine {
 
     export interface CommandLineOption {
         help?:boolean;
+        platform?:string;
         project?:string;
         version?:boolean;
         errors?:string[]
-    }
-
-    interface Map<T> {
-        [index:string]:T;
     }
 
     interface OptionNameMap {
@@ -126,8 +124,19 @@ namespace CommandLine {
                 else {
                     options.errors.push("Unknown option '" + s + "'.");
                 }
+            } else {
+                options.platform = s;
             }
         }
+        if (!options.platform) {
+            let p = os.platform();
+            if (p == "darwin") {
+                options.platform = "mac";
+            } else if (p == "win32") {
+                options.platform = "win";
+            }
+        }
+
         return options;
     }
 }
