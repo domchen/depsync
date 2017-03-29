@@ -45,11 +45,7 @@ class Config {
         let fs = require("fs");
         let path = require("path");
         while (true) {
-            let fileName = Utils.joinPath(searchPath, "tspack.json");
-            if (fs.existsSync(fileName)) {
-                return fileName;
-            }
-            fileName = Utils.joinPath(searchPath, "tsconfig.json");
+            let fileName = Utils.joinPath(searchPath, "DEPS");
             if (fs.existsSync(fileName)) {
                 return fileName;
             }
@@ -85,11 +81,13 @@ class Config {
         for (let item of downloads) {
             item.url = this.formatString(item.url, data.vars);
             item.dir = this.formatString(item.dir, data.vars);
-            item.dir = path.join(projectPath, item.dir);
+            let fileName = item.url.split("?")[0];
+            item.dir = path.join(projectPath, item.dir, path.basename(fileName));
             if (item.unzip) {
                 item.unzip = this.formatString(item.unzip, data.vars);
             }
         }
+        this.downloads = downloads;
     }
 
     private formatString(text:string, vars:Map<string>):string {

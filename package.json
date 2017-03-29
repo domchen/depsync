@@ -23,6 +23,7 @@
     "node": ">=0.8.0"
   },
   "dependencies": {
+    "follow-redirects": "latest",
     "progress": "latest"
   },
   "devDependencies": {

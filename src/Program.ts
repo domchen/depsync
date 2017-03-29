@@ -84,10 +84,7 @@ namespace Program {
         let projectPath = path.dirname(configFileName);
         let config = new Config(data, projectPath, commandOptions.platform);
 
-        for (let item of config.downloads) {
-
-        }
-
+        Loader.downloadFiles(config.downloads);
     }
 
     function printVersion():void {
@@ -120,4 +117,4 @@ namespace Program {
 
 }
 
-Program.run(process.argv.slice(1));
+Program.run(process.argv.slice(2)); 
