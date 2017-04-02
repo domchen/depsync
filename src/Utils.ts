@@ -122,7 +122,7 @@ namespace Utils {
         }
     }
 
-    export function writeFileTo(filePath:string, content:string | Buffer, overwrite?:boolean, mode?:number) {
+    export function writeFileTo(filePath:string, content:any, overwrite?:boolean, mode?:number) {
         if (fs.existsSync(filePath)) {
             if (!overwrite) {
                 return false;

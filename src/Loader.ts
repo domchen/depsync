@@ -30,7 +30,9 @@ namespace Loader {
     let http = require('follow-redirects').http;
     let https = require('follow-redirects').https;
     let path = require("path");
+    let readLine = require("readline");
     let AdmZip = require('adm-zip');
+    let ProgressBar = require("progress");
 
     export function downloadFiles(list:DownloadItem[]) {
         function next() {
@@ -51,9 +53,19 @@ namespace Loader {
                 loadSingleFile(item.url, filePath, onFinish);
             }
 
-            function onFinish() {
+            function onFinish(error?:Error) {
+                if (error) {
+                    console.log(error.message);
+                    return;
+                }
                 if (item.unzip) {
-                    unzipFile(filePath, item.dir)
+                    try {
+                        unzipFile(filePath, item.dir);
+                    } catch (e) {
+                        console.log("Cannot unzip file: " + filePath);
+                        process.exit(1);
+                    }
+
                 }
                 next();
             }
@@ -63,14 +75,14 @@ namespace Loader {
     }
 
     function unzipFile(filePath:string, dir:string) {
-        console.log("unzipping...", filePath);
+        console.log("unzip... " + filePath);
         let zip = new AdmZip(filePath);
         for (let entry of zip.getEntries()) {
-            let entryName = entry.entryName;
+            let entryName = entry.entryName.toString();
             if (entryName.substr(0, 8) == "__MACOSX" || entryName.substr(entryName.length - 9, 9) == ".DS_Store") {
                 continue;
             }
-            let targetPath = path.resolve(dir, entryName.toString());
+            let targetPath = path.resolve(dir, entryName);
             if (entry.isDirectory) {
                 Utils.deletePath(targetPath);
                 Utils.createDirectory(targetPath);
@@ -84,23 +96,31 @@ namespace Loader {
             Utils.writeFileTo(targetPath, content, true);
         }
         Utils.deletePath(filePath);
+        readLine.moveCursor(process.stderr, 0, -1);
+        readLine.clearScreenDown(process.stderr);
     }
 
-    function loadMultiParts(urls:string[], filePath:string, callback:() => void) {
+    function loadMultiParts(urls:string[], filePath:string, callback:(error?:Error) => void) {
         function next() {
             if (urls.length == 0) {
                 callback && callback();
                 return;
             }
             let url = urls.shift();
-            loadSingleFile(url, filePath, next, {flags: 'a'});
+            loadSingleFile(url, filePath, function (error?:Error) {
+                if (error) {
+                    callback && callback(error);
+                    return;
+                }
+                next();
+            }, {flags: 'a'});
         }
 
         next();
     }
 
-    function loadSingleFile(url:string, filePath:string, callback:() => void, options?:any) {
-        console.log("downloading...", url);
+    function loadSingleFile(url:string, filePath:string, callback:(error?:Error) => void, options?:any) {
+        console.log("sync... " + url);
         let httpClient = url.slice(0, 5) === 'https' ? https : http;
         try {
             Utils.createDirectory(path.dirname(filePath));
@@ -109,12 +129,34 @@ namespace Loader {
             process.exit(1);
         }
 
-        let writer = fs.createWriteStream(filePath, options);
-        writer.on('finish', function () {
-            callback && callback();
+        let file = fs.createWriteStream(filePath);
+        let outputError:Error;
+        file.on("close", function () {
+            callback && callback(outputError);
         });
-        httpClient.get(url, function (response) {
-            response.pipe(writer);
+        let request = httpClient.get(url, function (response) {
+            let length = parseInt(response.headers['content-length'], 10);
+            let bar = new ProgressBar(':bar :percent :current/:total ', {
+                complete: '█',
+                incomplete: '░',
+                width: 80,
+                total: length
+            });
+            response.on('data', function (chunk) {
+                file.write(chunk);
+                bar.tick(chunk.length);
+            });
+            response.on('end', function () {
+                file.end();
+                readLine.moveCursor(process.stderr, 0, -1);
+                readLine.clearScreenDown(process.stderr);
+            });
+            response.on('error', function (error:Error) {
+                file.close();
+                outputError = error;
+                readLine.moveCursor(process.stderr, 0, -1);
+                readLine.clearScreenDown(process.stderr);
+            });
         });
     }
 }

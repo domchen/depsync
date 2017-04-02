@@ -36,7 +36,7 @@ interface DEPSData {
 interface DownloadItem {
     url:string;
     dir:string;
-    unzip?:string;
+    unzip?:boolean | string;
     multipart?:string[]
 }
 
@@ -84,7 +84,11 @@ class Config {
             item.dir = this.formatString(item.dir, data.vars);
             item.dir = path.join(projectPath, item.dir);
             if (item.unzip) {
-                item.unzip = this.formatString(item.unzip, data.vars);
+                let unzip = item.unzip;
+                if (typeof unzip == "string") {
+                    unzip = this.formatString(<string>unzip, data.vars);
+                }
+                item.unzip = (unzip == "true");
             }
         }
         this.downloads = downloads;
