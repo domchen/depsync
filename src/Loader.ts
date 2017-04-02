@@ -129,7 +129,7 @@ namespace Loader {
             process.exit(1);
         }
 
-        let file = fs.createWriteStream(filePath);
+        let file = fs.createWriteStream(filePath, options);
         let outputError:Error;
         file.on("close", function () {
             callback && callback(outputError);
