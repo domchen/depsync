@@ -117,4 +117,4 @@ namespace Program {
 
 }
 
-Program.run(process.argv.slice(2)); 
+Program.run(process.argv.slice(2));

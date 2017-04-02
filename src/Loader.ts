@@ -30,6 +30,7 @@ namespace Loader {
     let http = require('follow-redirects').http;
     let https = require('follow-redirects').https;
     let path = require("path");
+    let AdmZip = require('adm-zip');
 
     export function downloadFiles(list:DownloadItem[]) {
         function next() {
@@ -37,61 +38,83 @@ namespace Loader {
                 return;
             }
             let item = list.shift();
-            console.log("downloading...", item.url, " to ", item.dir);
-            download(item.url, item.dir, function () {
+            let fileName = item.url.split("?")[0];
+            let filePath = path.join(item.dir, path.basename(fileName));
+            Utils.deletePath(filePath);
+            if (item.multipart) {
+                let urls:string[] = [];
+                for (let tail of item.multipart) {
+                    urls.push(item.url + tail);
+                }
+                loadMultiParts(urls, filePath, onFinish);
+            } else {
+                loadSingleFile(item.url, filePath, onFinish);
+            }
+
+            function onFinish() {
+                if (item.unzip) {
+                    unzipFile(filePath, item.dir)
+                }
                 next();
-            });
+            }
         }
 
         next();
     }
 
-    function download(url:string, filePath:string, callback:() => void):void {
+    function unzipFile(filePath:string, dir:string) {
+        console.log("unzipping...", filePath);
+        let zip = new AdmZip(filePath);
+        for (let entry of zip.getEntries()) {
+            let entryName = entry.entryName;
+            if (entryName.substr(0, 8) == "__MACOSX" || entryName.substr(entryName.length - 9, 9) == ".DS_Store") {
+                continue;
+            }
+            let targetPath = path.resolve(dir, entryName.toString());
+            if (entry.isDirectory) {
+                Utils.deletePath(targetPath);
+                Utils.createDirectory(targetPath);
+                continue;
+            }
+            let content = entry.getData();
+            if (!content) {
+                console.log("Cannot unzip file:" + filePath);
+                break;
+            }
+            Utils.writeFileTo(targetPath, content, true);
+        }
+        Utils.deletePath(filePath);
+    }
+
+    function loadMultiParts(urls:string[], filePath:string, callback:() => void) {
+        function next() {
+            if (urls.length == 0) {
+                callback && callback();
+                return;
+            }
+            let url = urls.shift();
+            loadSingleFile(url, filePath, next, {flags: 'a'});
+        }
+
+        next();
+    }
+
+    function loadSingleFile(url:string, filePath:string, callback:() => void, options?:any) {
+        console.log("downloading...", url);
         let httpClient = url.slice(0, 5) === 'https' ? https : http;
         try {
-            createDirectory(path.dirname(filePath));
+            Utils.createDirectory(path.dirname(filePath));
         } catch (e) {
             console.log("Cannot create directory: " + path.dirname(filePath));
             process.exit(1);
         }
 
-        let writer = fs.createWriteStream(filePath);
+        let writer = fs.createWriteStream(filePath, options);
         writer.on('finish', function () {
             callback && callback();
         });
         httpClient.get(url, function (response) {
             response.pipe(writer);
         });
-    }
-
-    function createDirectory(filePath:string, mode?:number):void {
-        if (mode === undefined) {
-            mode = 511 & (~process.umask());
-        }
-
-        filePath = path.resolve(filePath);
-        try {
-            fs.mkdirSync(filePath, mode);
-        }
-        catch (err0) {
-            switch (err0.code) {
-                case 'ENOENT':
-                    createDirectory(path.dirname(filePath), mode);
-                    createDirectory(filePath, mode);
-                    break;
-                default:
-                    let stat;
-                    try {
-                        stat = fs.statSync(filePath);
-                    }
-                    catch (err1) {
-                        throw err0;
-                    }
-                    if (!stat.isDirectory()) {
-                        throw err0;
-                    }
-                    break;
-            }
-        }
     }
 }

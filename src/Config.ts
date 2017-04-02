@@ -37,6 +37,7 @@ interface DownloadItem {
     url:string;
     dir:string;
     unzip?:string;
+    multipart?:string[]
 }
 
 class Config {
@@ -81,8 +82,7 @@ class Config {
         for (let item of downloads) {
             item.url = this.formatString(item.url, data.vars);
             item.dir = this.formatString(item.dir, data.vars);
-            let fileName = item.url.split("?")[0];
-            item.dir = path.join(projectPath, item.dir, path.basename(fileName));
+            item.dir = path.join(projectPath, item.dir);
             if (item.unzip) {
                 item.unzip = this.formatString(item.unzip, data.vars);
             }
