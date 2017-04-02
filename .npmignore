@@ -1,6 +1,9 @@
 doc
-#src
 .settings/
 *.ts
 /src
+/bin-debug
+/test
+.idea/
+/third_party
 DEPS.cache
