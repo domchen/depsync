@@ -120,7 +120,7 @@ namespace Loader {
     }
 
     function loadSingleFile(url:string, filePath:string, callback:(error?:Error) => void, options?:any) {
-        console.log("sync... " + url);
+        console.log("download... " + url);
         let httpClient = url.slice(0, 5) === 'https' ? https : http;
         try {
             Utils.createDirectory(path.dirname(filePath));
@@ -136,7 +136,7 @@ namespace Loader {
         });
         let request = httpClient.get(url, function (response) {
             let length = parseInt(response.headers['content-length'], 10);
-            let bar = new ProgressBar(':bar :percent :current/:total ', {
+            let bar = new ProgressBar(':bar [ :percent | :current/:total | :etas ] ', {
                 complete: '█',
                 incomplete: '░',
                 width: 80,
