@@ -36,7 +36,7 @@ namespace Loader {
 
     export function downloadFiles(list:DownloadItem[], callback:() => void) {
         if (list.length == 0) {
-            callback && callback()
+            callback && callback();
             return;
         }
         let item = list.shift();
@@ -60,7 +60,6 @@ namespace Loader {
         function onFinish(error?:Error) {
             if (error) {
                 console.log(error.message);
-                Cache.save();
                 return;
             }
             let filePaths:string[] = [];
@@ -96,8 +95,9 @@ namespace Loader {
             }
             let content = entry.getData();
             if (!content) {
-                console.log("Cannot unzip file:" + filePath);
-                break;
+                readLine.moveCursor(process.stderr, 0, -1);
+                readLine.clearScreenDown(process.stderr);
+                throw new Error("Cannot unzip file:" + filePath);
             }
             Utils.writeFileTo(targetPath, content, true);
         }
@@ -137,6 +137,11 @@ namespace Loader {
             callback && callback(outputError);
         });
         let request = httpClient.get(url, function (response) {
+            if (response.statusCode >= 400 || response.statusCode == 0) {
+                file.close();
+                outputError = new Error("Cannot download file : "+response.statusMessage);
+                return;
+            }
             let length = parseInt(response.headers['content-length'], 10);
             let bar = new ProgressBar(':bar [ :percent | :current/:total | :etas ] ', {
                 complete: '█',
