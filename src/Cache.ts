@@ -38,6 +38,7 @@ namespace Cache {
 
     export function readCache(configFileName:string) {
         projectPath = path.dirname(configFileName);
+
         cacheConfigFile = path.join(projectPath, "DEPS.cache");
         let data:CacheData;
         try {
@@ -96,8 +97,25 @@ namespace Cache {
         downloads.push(cachedItem);
     }
 
+    function checkIgnoreFile(configFile:string) {
+        if (fs.existsSync(configFile)) {
+            try {
+                let configText = fs.readFileSync(configFile, "utf-8");
+                if (configText.indexOf("DEPS.cache") == -1) {
+                    configText = configText.trim() + "\nDEPS.cache\n";
+                    Utils.writeFileTo(configFile, configText, true);
+                }
+            } catch (e) {
+            }
+        }
+    }
+
     export function save() {
         let data:CacheData = {"downloads": downloads};
         Utils.writeFileTo(cacheConfigFile, JSON.stringify(data, null, "  "), true);
+
+        checkIgnoreFile(path.resolve(projectPath, ".gitignore"))
+        checkIgnoreFile(path.resolve(projectPath, ".npmignore"))
     }
+
 }
