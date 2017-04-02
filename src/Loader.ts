@@ -79,17 +79,40 @@ namespace Loader {
         }
     }
 
+    function getEntryName(entry:any):string {
+        let entryName = entry.entryName.toString();
+        if (entryName.substr(0, 8) == "__MACOSX" || entryName.substr(entryName.length - 9, 9) == ".DS_Store") {
+            return "";
+        }
+        return entryName;
+    }
+
     function unzipFile(filePath:string, dir:string) {
         console.log("unzip... " + filePath);
         let zip = new AdmZip(filePath);
-        for (let entry of zip.getEntries()) {
-            let entryName = entry.entryName.toString();
-            if (entryName.substr(0, 8) == "__MACOSX" || entryName.substr(entryName.length - 9, 9) == ".DS_Store") {
+        let entries = zip.getEntries();
+        let rootNames:string[] = [];
+        for (let entry of entries) {
+            let entryName = getEntryName(entry);
+            if (!entryName) {
+                continue;
+            }
+            let name = entryName.split("\\").join("/").split("/")[0];
+            if (rootNames.indexOf(name) == -1) {
+                rootNames.push(name);
+            }
+        }
+        for (let name of rootNames) {
+            let targetPath = path.resolve(dir, name);
+            Utils.deletePath(targetPath);
+        }
+        for (let entry of entries) {
+            let entryName = getEntryName(entry);
+            if (!entryName) {
                 continue;
             }
             let targetPath = path.resolve(dir, entryName);
             if (entry.isDirectory) {
-                Utils.deletePath(targetPath);
                 Utils.createDirectory(targetPath);
                 continue;
             }
@@ -139,7 +162,7 @@ namespace Loader {
         let request = httpClient.get(url, function (response) {
             if (response.statusCode >= 400 || response.statusCode == 0) {
                 file.close();
-                outputError = new Error("Cannot download file : "+response.statusMessage);
+                outputError = new Error("Cannot download file : " + response.statusMessage);
                 return;
             }
             let length = parseInt(response.headers['content-length'], 10);
