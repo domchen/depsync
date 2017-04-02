@@ -59,7 +59,18 @@ class Config {
         return "";
     }
 
-    public constructor(data:DEPSData, projectPath:string, platform:string) {
+    public constructor(configFileName:string, platform:string) {
+        let data:DEPSData;
+        try {
+            let fs = require("fs");
+            let jsonText = fs.readFileSync(configFileName, "utf-8");
+            data = JSON.parse(jsonText);
+        } catch (e) {
+            console.log("The DEPS config file is not a JSON file: " + configFileName);
+            process.exit(1);
+        }
+        let path = require("path");
+        let projectPath = path.dirname(configFileName);
         this.parse(data, projectPath, platform);
     }
 
@@ -83,12 +94,12 @@ class Config {
             item.url = this.formatString(item.url, data.vars);
             item.dir = this.formatString(item.dir, data.vars);
             item.dir = path.join(projectPath, item.dir);
-            if (item.unzip) {
-                let unzip = item.unzip;
-                if (typeof unzip == "string") {
-                    unzip = this.formatString(<string>unzip, data.vars);
-                }
+            let unzip = item.unzip;
+            if (typeof unzip == "string") {
+                unzip = this.formatString(<string>unzip, data.vars);
                 item.unzip = (unzip == "true");
+            } else if (typeof unzip != "boolean") {
+                item.unzip = false;
             }
         }
         this.downloads = downloads;

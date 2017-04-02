@@ -8,7 +8,7 @@
       {
         "url": "${SKIA_ROOT}/m58/include.zip",
         "dir": "third_party/skia",
-        "unzip": "true"
+        "unzip": true
       },
       {
         "url": "${V8_ROOT}/5.7.492/include.zip",
@@ -20,7 +20,7 @@
       {
         "url": "${SKIA_ROOT}/m58/darwin-x64.zip",
         "dir": "third_party/skia",
-        "unzip": "true"
+        "unzip": true
       },
       {
         "url": "${V8_ROOT}/5.7.492/darwin-x64.zip",
@@ -30,19 +30,19 @@
           ".003"
         ],
         "dir": "third_party/v8",
-        "unzip": "true"
+        "unzip": true
       }
     ],
     "win": [
       {
         "url": "${SKIA_ROOT}/m58/win-ia32.zip",
         "dir": "third_party/skia",
-        "unzip": "true"
+        "unzip": true
       },
       {
         "url": "${V8_ROOT}/5.7.492/win-ia32.zip",
         "dir": "third_party/v8",
-        "unzip": "true"
+        "unzip": true
       }
     ]
   }

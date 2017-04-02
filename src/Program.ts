@@ -36,18 +36,17 @@ namespace Program {
         if (commandOptions.errors.length > 0) {
             console.log(commandOptions.errors.join("\n") + "\n");
             process.exit(1);
-            return;
         }
 
         if (commandOptions.version) {
             printVersion();
-            process.exit(0);
+            return;
         }
 
         if (commandOptions.help) {
             printVersion();
             printHelp();
-            process.exit(0);
+            return;
         }
         let configFileName:string = "";
         if (commandOptions.project) {
@@ -68,23 +67,16 @@ namespace Program {
             if (!configFileName) {
                 printVersion();
                 printHelp();
-                process.exit(0);
+                return;
             }
         }
 
-        let data:DEPSData;
-        try {
-            let jsonText = fs.readFileSync(configFileName, CHARSET);
-            data = JSON.parse(jsonText);
-        } catch (e) {
-            console.log("The DEPS config file is not a JSON file: " + configFileName);
-            process.exit(0);
-        }
 
-        let projectPath = path.dirname(configFileName);
-        let config = new Config(data, projectPath, commandOptions.platform);
-
-        Loader.downloadFiles(config.downloads);
+        let config = new Config(configFileName, commandOptions.platform);
+        Cache.readCache(configFileName);
+        Loader.downloadFiles(config.downloads, function () {
+            Cache.save();
+        });
     }
 
     function printVersion():void {

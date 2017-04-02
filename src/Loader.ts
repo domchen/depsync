@@ -34,44 +34,50 @@ namespace Loader {
     let AdmZip = require('adm-zip');
     let ProgressBar = require("progress");
 
-    export function downloadFiles(list:DownloadItem[]) {
-        function next() {
-            if (list.length == 0) {
-                return;
+    export function downloadFiles(list:DownloadItem[], callback:() => void) {
+        if (list.length == 0) {
+            callback && callback()
+            return;
+        }
+        let item = list.shift();
+        if (Cache.isDownloaded(item)) {
+            downloadFiles(list, callback);
+            return;
+        }
+        let fileName = item.url.split("?")[0];
+        let filePath = path.join(item.dir, path.basename(fileName));
+        Utils.deletePath(filePath);
+        if (item.multipart) {
+            let urls:string[] = [];
+            for (let tail of item.multipart) {
+                urls.push(item.url + tail);
             }
-            let item = list.shift();
-            let fileName = item.url.split("?")[0];
-            let filePath = path.join(item.dir, path.basename(fileName));
-            Utils.deletePath(filePath);
-            if (item.multipart) {
-                let urls:string[] = [];
-                for (let tail of item.multipart) {
-                    urls.push(item.url + tail);
-                }
-                loadMultiParts(urls, filePath, onFinish);
-            } else {
-                loadSingleFile(item.url, filePath, onFinish);
-            }
-
-            function onFinish(error?:Error) {
-                if (error) {
-                    console.log(error.message);
-                    return;
-                }
-                if (item.unzip) {
-                    try {
-                        unzipFile(filePath, item.dir);
-                    } catch (e) {
-                        console.log("Cannot unzip file: " + filePath);
-                        process.exit(1);
-                    }
-
-                }
-                next();
-            }
+            loadMultiParts(urls, filePath, onFinish);
+        } else {
+            loadSingleFile(item.url, filePath, onFinish);
         }
 
-        next();
+        function onFinish(error?:Error) {
+            if (error) {
+                console.log(error.message);
+                Cache.save();
+                return;
+            }
+            let filePaths:string[] = [];
+            if (item.unzip) {
+                try {
+                    unzipFile(filePath, item.dir);
+                } catch (e) {
+                    console.log("Cannot unzip file: " + filePath);
+                    process.exit(1);
+                }
+
+            } else {
+                filePaths.push(filePath);
+            }
+            Cache.finishDownload(item);
+            downloadFiles(list, callback);
+        }
     }
 
     function unzipFile(filePath:string, dir:string) {
@@ -101,22 +107,18 @@ namespace Loader {
     }
 
     function loadMultiParts(urls:string[], filePath:string, callback:(error?:Error) => void) {
-        function next() {
-            if (urls.length == 0) {
-                callback && callback();
+        if (urls.length == 0) {
+            callback && callback();
+            return;
+        }
+        let url = urls.shift();
+        loadSingleFile(url, filePath, function (error?:Error) {
+            if (error) {
+                callback && callback(error);
                 return;
             }
-            let url = urls.shift();
-            loadSingleFile(url, filePath, function (error?:Error) {
-                if (error) {
-                    callback && callback(error);
-                    return;
-                }
-                next();
-            }, {flags: 'a'});
-        }
-
-        next();
+            loadMultiParts(urls, filePath, callback);
+        }, {flags: 'a'});
     }
 
     function loadSingleFile(url:string, filePath:string, callback:(error?:Error) => void, options?:any) {
