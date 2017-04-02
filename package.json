@@ -1,6 +1,6 @@
 {
   "name": "depsync",
-  "version": "0.0.3",
+  "version": "1.0.0",
   "author": "Dom Chen",
   "homepage": "http://www.idom.me/",
   "description": "Automatically synchronize the dependencies of a project by the DEPS configuration file.",
