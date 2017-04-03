@@ -33,7 +33,7 @@ The available platform names are defined in the DEPS file, you can also define a
 
 Here is an example of DEPS file:
 
-```
+```json
 {
   "vars": {
     "SKIA_ROOT": "https://raw.githubusercontent.com/domchen/libskia/release",
