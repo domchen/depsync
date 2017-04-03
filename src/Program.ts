@@ -28,8 +28,7 @@ namespace Program {
 
     let fs = require("fs");
     let path = require("path");
-    const CHARSET = "utf-8";
-    const VERSION = "1.0.0";
+    const VERSION = "1.0.1";
 
     export function run(args:string[]):void {
         let commandOptions = CommandLine.parse(args);
