@@ -33,6 +33,7 @@ namespace Loader {
     let readLine = require("readline");
     let AdmZip = require('adm-zip');
     let ProgressBar = require("progress");
+    var terminal = require('terminal-kit').terminal
 
     export function downloadFiles(list:DownloadItem[], callback:() => void) {
         if (list.length == 0) {
@@ -65,7 +66,10 @@ namespace Loader {
             let filePaths:string[] = [];
             if (item.unzip) {
                 try {
+                    terminal.saveCursor();
                     unzipFile(filePath, item.dir);
+                    terminal.restoreCursor();
+                    terminal.eraseDisplayBelow();
                 } catch (e) {
                     console.log("Cannot unzip file: " + filePath);
                     process.exit(1);
@@ -118,15 +122,11 @@ namespace Loader {
             }
             let content = entry.getData();
             if (!content) {
-                readLine.moveCursor(process.stderr, 0, -1);
-                readLine.clearScreenDown(process.stderr);
                 throw new Error("Cannot unzip file:" + filePath);
             }
             Utils.writeFileTo(targetPath, content, true);
         }
         Utils.deletePath(filePath);
-        readLine.moveCursor(process.stderr, 0, -1);
-        readLine.clearScreenDown(process.stderr);
     }
 
     function loadMultiParts(urls:string[], filePath:string, callback:(error?:Error) => void) {
@@ -144,8 +144,27 @@ namespace Loader {
         }, {flags: 'a'});
     }
 
+
     function loadSingleFile(url:string, filePath:string, callback:(error?:Error) => void, options?:any) {
+        let retryTimes = 0;
+        terminal.saveCursor();
         console.log("download... " + url);
+        loadSingleFileWithTimeOut(url, filePath, onFinish, options);
+        function onFinish(error?:Error) {
+            terminal.restoreCursor();
+            terminal.eraseDisplayBelow();
+            if (error && error.message == "timeout" && retryTimes <3) {
+                retryTimes++;
+                terminal.saveCursor();
+                console.log("download retry "+retryTimes+"... " + url);
+                loadSingleFileWithTimeOut(url, filePath, onFinish, options);
+            } else {
+                callback(error);
+            }
+        }
+    }
+
+    function loadSingleFileWithTimeOut(url:string, filePath:string, callback:(error?:Error) => void, options?:any) {
         let httpClient = url.slice(0, 5) === 'https' ? https : http;
         try {
             Utils.createDirectory(path.dirname(filePath));
@@ -178,14 +197,15 @@ namespace Loader {
             });
             response.on('end', function () {
                 file.end();
-                readLine.moveCursor(process.stderr, 0, -1);
-                readLine.clearScreenDown(process.stderr);
             });
             response.on('error', function (error:Error) {
                 file.close();
                 outputError = error;
-                readLine.moveCursor(process.stderr, 0, -1);
-                readLine.clearScreenDown(process.stderr);
+            });
+            request.setTimeout(15000, function () {
+                request.abort();
+                file.close();
+                outputError = new Error("timeout");
             });
         });
     }

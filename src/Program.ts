@@ -70,11 +70,10 @@ namespace Program {
             }
         }
 
-
         let config = new Config(configFileName, commandOptions.platform);
-        Cache.readCache(configFileName);
+        Cache.initCache(configFileName);
         Loader.downloadFiles(config.downloads, function () {
-            Cache.save();
+            //console.log("all done!");
         });
     }
 

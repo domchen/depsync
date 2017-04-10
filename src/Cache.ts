@@ -32,27 +32,18 @@ namespace Cache {
         downloads:DownloadItem[];
     }
 
-    let downloads:DownloadItem[];
     let projectPath:string;
     let cacheConfigFile:string;
 
-    export function readCache(configFileName:string) {
+    export function initCache(configFileName:string) {
         projectPath = path.dirname(configFileName);
-
         cacheConfigFile = path.join(projectPath, "DEPS.cache");
-        let data:CacheData;
-        try {
-            let jsonText = fs.readFileSync(cacheConfigFile, "utf-8");
-            data = JSON.parse(jsonText);
-            downloads = data.downloads;
-        } catch (e) {
-            downloads = [];
-        }
     }
 
     export function isDownloaded(targetItem:DownloadItem):boolean {
+        let data = readCache();
         let cachedItem:DownloadItem;
-        for (let item of downloads) {
+        for (let item of data.downloads) {
             if (item.url == targetItem.url) {
                 cachedItem = item;
                 break;
@@ -79,10 +70,11 @@ namespace Cache {
     }
 
     export function finishDownload(targetItem:DownloadItem):void {
+        let data = readCache();
         let index = 0;
-        for (let item of downloads) {
+        for (let item of data.downloads) {
             if (item.url == targetItem.url) {
-                downloads.splice(index, 1);
+                data.downloads.splice(index, 1);
                 break;
             }
             index++;
@@ -94,7 +86,34 @@ namespace Cache {
         if (targetItem.multipart) {
             cachedItem.multipart = targetItem.multipart.concat();
         }
-        downloads.push(cachedItem);
+        data.downloads.push(cachedItem);
+        saveCache(data);
+    }
+
+    function readCache():CacheData {
+        let data:CacheData;
+        try {
+            let jsonText = fs.readFileSync(cacheConfigFile, "utf-8");
+            data = JSON.parse(jsonText);
+        } catch (e) {
+            data = {downloads: []};
+        }
+        return data;
+    }
+
+    let ignoreFileChecked = false;
+
+    function saveCache(data:CacheData) {
+        try {
+            Utils.writeFileTo(cacheConfigFile, JSON.stringify(data, null, "  "), true);
+        }
+        catch (e) {
+        }
+        if (!ignoreFileChecked) {
+            ignoreFileChecked = true;
+            checkIgnoreFile(path.resolve(projectPath, ".gitignore"))
+            checkIgnoreFile(path.resolve(projectPath, ".npmignore"))
+        }
     }
 
     function checkIgnoreFile(configFile:string) {
@@ -109,13 +128,4 @@ namespace Cache {
             }
         }
     }
-
-    export function save() {
-        let data:CacheData = {"downloads": downloads};
-        Utils.writeFileTo(cacheConfigFile, JSON.stringify(data, null, "  "), true);
-
-        checkIgnoreFile(path.resolve(projectPath, ".gitignore"))
-        checkIgnoreFile(path.resolve(projectPath, ".npmignore"))
-    }
-
 }

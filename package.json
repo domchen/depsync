@@ -25,7 +25,8 @@
   "dependencies": {
     "adm-zip": "latest",
     "follow-redirects": "latest",
-    "progress": "latest"
+    "progress": "latest",
+    "terminal-kit": "^1.2.3"
   },
   "devDependencies": {
     "@types/node": "^7.0.12",
