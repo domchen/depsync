@@ -73,7 +73,7 @@ namespace Program {
         let config = new Config(configFileName, commandOptions.platform);
         Cache.initCache(configFileName);
         Loader.downloadFiles(config.downloads, function () {
-            //console.log("all done!");
+            Cache.clean(config.downloads);
         });
     }
 

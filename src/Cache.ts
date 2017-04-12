@@ -40,6 +40,28 @@ namespace Cache {
         cacheConfigFile = path.join(projectPath, "DEPS.cache");
     }
 
+    /**
+     * 移除缓存中已经不存在于当前配置文件的下载项
+     * @param downloads
+     */
+    export function clean(downloads:DownloadItem[]) {
+        let data = readCache();
+        for (let i = data.downloads.length - 1; i >= 0; i--) {
+            let item = data.downloads[i];
+            let found = false;
+            for (let downloadItem of downloads) {
+                if (downloadItem.url == item.url) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                data.downloads.splice(i, 1);
+            }
+        }
+        saveCache(data);
+    }
+
     export function isDownloaded(targetItem:DownloadItem):boolean {
         let data = readCache();
         let cachedItem:DownloadItem;

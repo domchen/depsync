@@ -33,16 +33,26 @@ namespace Loader {
     let readLine = require("readline");
     let AdmZip = require('adm-zip');
     let ProgressBar = require("progress");
-    var terminal = require('terminal-kit').terminal
+    let terminal = require('terminal-kit').terminal
 
     export function downloadFiles(list:DownloadItem[], callback:() => void) {
+        if (!list) {
+            list = [];
+        } else {
+            list = list.concat();
+        }
+        doDownloadFiles(list, callback);
+
+    }
+
+    export function doDownloadFiles(list:DownloadItem[], callback:() => void) {
         if (list.length == 0) {
             callback && callback();
             return;
         }
         let item = list.shift();
         if (Cache.isDownloaded(item)) {
-            downloadFiles(list, callback);
+            doDownloadFiles(list, callback);
             return;
         }
         let fileName = item.url.split("?")[0];
@@ -79,7 +89,7 @@ namespace Loader {
                 filePaths.push(filePath);
             }
             Cache.finishDownload(item);
-            downloadFiles(list, callback);
+            doDownloadFiles(list, callback);
         }
     }
 
@@ -153,10 +163,10 @@ namespace Loader {
         function onFinish(error?:Error) {
             terminal.restoreCursor();
             terminal.eraseDisplayBelow();
-            if (error && error.message == "timeout" && retryTimes <3) {
+            if (error && error.message == "timeout" && retryTimes < 3) {
                 retryTimes++;
                 terminal.saveCursor();
-                console.log("download retry "+retryTimes+"... " + url);
+                console.log("download retry " + retryTimes + "... " + url);
                 loadSingleFileWithTimeOut(url, filePath, onFinish, options);
             } else {
                 callback(error);
