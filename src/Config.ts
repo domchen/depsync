@@ -24,21 +24,36 @@
 //
 //////////////////////////////////////////////////////////////////////////////////////
 
-interface DEPSData {
-    vars?:Map<string>;
-    files?:{
-        common?:DownloadItem[];
-        mac?:DownloadItem[];
-        win?:DownloadItem[]
-    }
-}
-
 interface DownloadItem {
     url:string;
     dir:string;
     unzip?:boolean | string;
     multipart?:string[]
+    platform?:string;
 }
+
+
+interface ActionItem {
+    command:string;
+    dir:string;
+    platform?:string;
+}
+
+interface FileList {
+    [key:string]:DownloadItem[];
+}
+
+interface ActionList {
+    [key:string]:ActionItem[];
+}
+
+interface DEPSData {
+    version:string;
+    vars?:Map<string>;
+    files?:FileList;
+    actions?:ActionList;
+}
+
 
 class Config {
 
@@ -59,7 +74,7 @@ class Config {
         return "";
     }
 
-    public constructor(configFileName:string, platform:string) {
+    public constructor(configFileName:string) {
         let data:DEPSData;
         try {
             let fs = require("fs");
@@ -71,38 +86,62 @@ class Config {
         }
         let path = require("path");
         let projectPath = path.dirname(configFileName);
-        this.parse(data, projectPath, platform);
+        this.parse(data, projectPath);
     }
 
-    public downloads:DownloadItem[];
+    public version:string;
+    public files:DownloadItem[];
+    public actions:ActionItem[];
 
-    private parse(data:DEPSData, projectPath:string, platform:string):void {
-        let path = require("path");
-        let files = data.files;
-        let downloads:DownloadItem[] = [];
-        if (files.common) {
-            for (let item of files.common) {
-                downloads.push(item);
-            }
+    private parse(data:DEPSData, projectPath:string):void {
+        this.version = data.version ? data.version : "0.0.0";
+        this.files = this.parseFiles(data.vars, data.files, projectPath);
+        this.actions = this.parseActions(data.vars, data.actions, projectPath);
+    }
+
+    private parseFiles(vars:Map<string>, files:FileList, projectPath:string):DownloadItem[] {
+        if (!files) {
+            return [];
         }
-        if (files[platform]) {
+        let path = require("path");
+        let downloads:DownloadItem[] = [];
+        let platforms = Object.keys(files);
+        for (let platform of platforms) {
             for (let item of files[platform]) {
                 downloads.push(item);
+                item.url = this.formatString(item.url, vars);
+                item.dir = this.formatString(item.dir, vars);
+                item.dir = path.resolve(projectPath, item.dir);
+                let unzip = item.unzip;
+                if (typeof unzip == "string") {
+                    unzip = this.formatString(<string>unzip, vars);
+                    item.unzip = (unzip == "true");
+                } else if (typeof unzip != "boolean") {
+                    item.unzip = false;
+                }
+                item.platform = platform;
             }
         }
-        for (let item of downloads) {
-            item.url = this.formatString(item.url, data.vars);
-            item.dir = this.formatString(item.dir, data.vars);
-            item.dir = path.join(projectPath, item.dir);
-            let unzip = item.unzip;
-            if (typeof unzip == "string") {
-                unzip = this.formatString(<string>unzip, data.vars);
-                item.unzip = (unzip == "true");
-            } else if (typeof unzip != "boolean") {
-                item.unzip = false;
+        return downloads;
+    }
+
+    private parseActions(vars:Map<string>, actions:ActionList, projectPath:string):ActionItem[] {
+        if (!actions) {
+            return [];
+        }
+        let path = require("path");
+        let list:ActionItem[] = [];
+        let platforms = Object.keys(actions);
+        for (let platform of platforms) {
+            for (let item of actions[platform]) {
+                list.push(item);
+                item.command = this.formatString(item.command, vars);
+                item.dir = this.formatString(item.dir, vars);
+                item.dir = path.resolve(projectPath, item.dir);
+                item.platform = platform;
             }
         }
-        this.downloads = downloads;
+        return list;
     }
 
     private formatString(text:string, vars:Map<string>):string {

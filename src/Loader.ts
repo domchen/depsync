@@ -33,15 +33,19 @@ namespace Loader {
     let readLine = require("readline");
     let AdmZip = require('adm-zip');
     let ProgressBar = require("progress");
-    let terminal = require('terminal-kit').terminal
+    let terminal = require('terminal-kit').terminal;
 
-    export function downloadFiles(list:DownloadItem[], callback:() => void) {
+    export function downloadFiles(list:DownloadItem[], platform:string, callback:() => void) {
         if (!list) {
             list = [];
-        } else {
-            list = list.concat();
         }
-        doDownloadFiles(list, callback);
+        let files:DownloadItem[] = [];
+        for (let item of list) {
+            if (item.platform == platform || item.platform == "common") {
+                files.push(item);
+            }
+        }
+        doDownloadFiles(files, callback);
 
     }
 
@@ -56,7 +60,7 @@ namespace Loader {
             return;
         }
         let fileName = item.url.split("?")[0];
-        let filePath = path.join(item.dir, path.basename(fileName));
+        let filePath = path.resolve(item.dir, path.basename(fileName));
         Utils.deletePath(filePath);
         if (item.multipart) {
             let urls:string[] = [];
@@ -70,10 +74,11 @@ namespace Loader {
 
         function onFinish(error?:Error) {
             if (error) {
-                console.log(error.message);
+                console.log("downloading... " + item.url);
+                console.log("Cannot download file : " + error.message);
+                process.exit(1);
                 return;
             }
-            let filePaths:string[] = [];
             if (item.unzip) {
                 try {
                     terminal.saveCursor();
@@ -85,8 +90,6 @@ namespace Loader {
                     process.exit(1);
                 }
 
-            } else {
-                filePaths.push(filePath);
             }
             Cache.finishDownload(item);
             doDownloadFiles(list, callback);
@@ -102,7 +105,7 @@ namespace Loader {
     }
 
     function unzipFile(filePath:string, dir:string) {
-        console.log("unzip... " + filePath);
+        console.log("unzipping... " + filePath);
         let zip = new AdmZip(filePath);
         let entries = zip.getEntries();
         let rootNames:string[] = [];
@@ -158,7 +161,7 @@ namespace Loader {
     function loadSingleFile(url:string, filePath:string, callback:(error?:Error) => void, options?:any) {
         let retryTimes = 0;
         terminal.saveCursor();
-        console.log("download... " + url);
+        console.log("downloading... " + url);
         loadSingleFileWithTimeOut(url, filePath, onFinish, options);
         function onFinish(error?:Error) {
             terminal.restoreCursor();
@@ -191,7 +194,7 @@ namespace Loader {
         let request = httpClient.get(url, function (response) {
             if (response.statusCode >= 400 || response.statusCode == 0) {
                 file.close();
-                outputError = new Error("Cannot download file : " + response.statusMessage);
+                outputError = new Error(response.statusMessage);
                 return;
             }
             let length = parseInt(response.headers['content-length'], 10);

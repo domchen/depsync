@@ -45,5 +45,17 @@
         "unzip": true
       }
     ]
+  },
+  "actions": {
+    "common": [
+      {
+        "command": "npm install tspack",
+        "dir": "./"
+      },
+      {
+        "command": "node node_modules/tspack/bin/tspack",
+        "dir": "./"
+      }
+    ]
   }
 }

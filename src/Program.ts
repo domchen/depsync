@@ -28,7 +28,7 @@ namespace Program {
 
     let fs = require("fs");
     let path = require("path");
-    const VERSION = "1.0.3";
+    const VERSION = "1.0.4";
 
     export function run(args:string[]):void {
         let commandOptions = CommandLine.parse(args);
@@ -70,15 +70,47 @@ namespace Program {
             }
         }
 
-        let config = new Config(configFileName, commandOptions.platform);
+        let config = new Config(configFileName);
+        if (compareVersion(VERSION, config.version) < 0) {
+            console.log("DEPS file requires version: " + config.version);
+            console.log("The current depsync version: " + VERSION);
+            console.log("Please update the depsync tool and then try again.");
+            process.exit(1);
+        }
         Cache.initCache(configFileName);
-        Loader.downloadFiles(config.downloads, function () {
-            Cache.clean(config.downloads);
+        Loader.downloadFiles(config.files, commandOptions.platform, function () {
+            Action.executeActions(config.actions, commandOptions.platform, function () {
+                Cache.clean(config.files);
+            })
         });
     }
 
     function printVersion():void {
         console.log("Version " + VERSION + "\n");
+    }
+
+    function compareVersion(versionA:string, versionB:string):number {
+        if (versionA == versionB) {
+            return 0;
+        }
+        let listA = versionA.split(".");
+        let listB = versionB.split(".");
+        let length = Math.max(listA.length, listB.length)
+        for (let i = 0; i < length; i++) {
+            if (listA.length <= i) {
+                return -1;
+            }
+            let a = parseInt(listA[i]);
+            if (listB.length <= i) {
+                return 1
+            }
+            let b = parseInt(listB[i]);
+            if (a == b) {
+                continue;
+            }
+            return a > b ? 1 : -1;
+        }
+        return 0;
     }
 
     function printHelp():void {

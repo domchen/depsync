@@ -1,6 +1,6 @@
 {
   "name": "depsync",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "author": "Dom Chen",
   "homepage": "http://www.idom.me/",
   "description": "Automatically synchronize the dependencies of a project by the DEPS configuration file.",
@@ -26,10 +26,10 @@
     "adm-zip": "latest",
     "follow-redirects": "latest",
     "progress": "latest",
-    "terminal-kit": "^1.2.3"
+    "terminal-kit": "latest"
   },
   "devDependencies": {
-    "@types/node": "^7.0.12",
-    "@types/progress": "^1.1.28"
+    "@types/node": "latest",
+    "@types/progress": "latest"
   }
 }

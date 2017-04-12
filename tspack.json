@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "outFile": "../lib/depsync.js",
+    "outFile": "lib/depsync.js",
     "target": "ES5",
     "noImplicitAny": false,
     "removeComments": true,
@@ -9,7 +9,10 @@
     "skipDefaultLibCheck": true,
     "stripInternal": true,
     "accessorOptimization": true,
-    "emitReflection": true,
+    "emitReflection": false,
     "reorderFiles": true
-  }
+  },
+  "include": [
+    "src/**/*"
+  ]
 }
