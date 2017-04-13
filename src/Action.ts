@@ -27,7 +27,7 @@
 namespace Action {
 
     let childProcess = require('child_process');
-    let terminal = require('terminal-kit').terminal
+    let terminal = require('terminal-kit').terminal;
 
     export function executeActions(list:ActionItem[], platform:string, callback:() => void) {
         if (!list) {
