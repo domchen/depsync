@@ -1,4 +1,5 @@
 {
+  "version": "1.0.5",
   "vars": {
     "SKIA_ROOT": "https://raw.githubusercontent.com/domchen/libskia/release",
     "V8_ROOT": "https://raw.githubusercontent.com/domchen/libv8/release"
