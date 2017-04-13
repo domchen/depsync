@@ -54,7 +54,8 @@ namespace Action {
 
         function onFinish(error:Error, stdout:string, stderr:string) {
             if (error) {
-                console.log(error.message);
+                console.error(stderr);
+                console.log(stdout);
                 process.exit(1);
             }
             terminal.restoreCursor();
