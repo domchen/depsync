@@ -33,7 +33,7 @@ namespace Program {
     export function run(args:string[]):void {
         let commandOptions = CommandLine.parse(args);
         if (commandOptions.errors.length > 0) {
-            console.log(commandOptions.errors.join("\n") + "\n");
+            terminal.log(commandOptions.errors.join("\n") + "\n");
             process.exit(1);
         }
 
@@ -56,7 +56,7 @@ namespace Program {
                 configFileName = commandOptions.project;
             }
             if (!fs.existsSync(configFileName)) {
-                console.log("Cannot find a DEPS file at the specified directory: " + commandOptions.project + "\n");
+                terminal.log("Cannot find a DEPS file at the specified directory: " + commandOptions.project + "\n");
                 process.exit(1);
             }
         }
@@ -72,9 +72,9 @@ namespace Program {
 
         let config = new Config(configFileName);
         if (compareVersion(VERSION, config.version) < 0) {
-            console.log("DEPS file requires version: " + config.version);
-            console.log("The current depsync version: " + VERSION);
-            console.log("Please update the depsync tool and then try again.");
+            terminal.log("DEPS file requires version: " + config.version);
+            terminal.log("The current depsync version: " + VERSION);
+            terminal.log("Please update the depsync tool and then try again.");
             process.exit(1);
         }
         Cache.initCache(configFileName);
@@ -86,7 +86,7 @@ namespace Program {
     }
 
     function printVersion():void {
-        console.log("Version " + VERSION + "\n");
+        terminal.log("Version " + VERSION + "\n");
     }
 
     function compareVersion(versionA:string, versionB:string):number {
@@ -130,7 +130,7 @@ namespace Program {
             name += makePadding(25 - name.length);
             output += name + option.description + newLine;
         });
-        console.log(output);
+        terminal.log(output);
     }
 
     function makePadding(paddingLength:number):string {

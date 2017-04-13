@@ -81,7 +81,7 @@ class Config {
             let jsonText = fs.readFileSync(configFileName, "utf-8");
             data = JSON.parse(jsonText);
         } catch (e) {
-            console.log("The DEPS config file is not a JSON file: " + configFileName);
+            terminal.log("The DEPS config file is not a JSON file: " + configFileName);
             process.exit(1);
         }
         let path = require("path");

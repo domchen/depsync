@@ -27,7 +27,6 @@
 namespace Action {
 
     let childProcess = require('child_process');
-    let terminal = require('terminal-kit').terminal;
 
     export function executeActions(list:ActionItem[], platform:string, callback:() => void) {
         if (!list) {
@@ -49,17 +48,16 @@ namespace Action {
         }
         let item = list.shift();
         terminal.saveCursor();
-        console.log("executing... " + item.command);
+        terminal.log("executing... " + item.command);
         childProcess.exec(item.command, {cwd: item.dir}, onFinish)
 
         function onFinish(error:Error, stdout:string, stderr:string) {
             if (error) {
-                console.error(stderr);
-                console.log(stdout);
+                terminal.error(stderr);
+                terminal.log(stdout);
                 process.exit(1);
             }
-            terminal.restoreCursor();
-            terminal.eraseDisplayBelow();
+            terminal.restoreCursorAndClear();
             doExecuteActions(list, callback);
         }
     }

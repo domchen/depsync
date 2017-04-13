@@ -33,7 +33,6 @@ namespace Loader {
     let readLine = require("readline");
     let AdmZip = require('adm-zip');
     let ProgressBar = require("progress");
-    let terminal = require('terminal-kit').terminal;
 
     export function downloadFiles(list:DownloadItem[], platform:string, callback:() => void) {
         if (!list) {
@@ -74,8 +73,8 @@ namespace Loader {
 
         function onFinish(error?:Error) {
             if (error) {
-                console.log("downloading... " + item.url);
-                console.log("Cannot download file : " + error.message);
+                terminal.log("downloading... " + item.url);
+                terminal.log("Cannot download file : " + error.message);
                 process.exit(1);
                 return;
             }
@@ -83,10 +82,9 @@ namespace Loader {
                 try {
                     terminal.saveCursor();
                     unzipFile(filePath, item.dir);
-                    terminal.restoreCursor();
-                    terminal.eraseDisplayBelow();
+                    terminal.restoreCursorAndClear();
                 } catch (e) {
-                    console.log("Cannot unzip file: " + filePath);
+                    terminal.log("Cannot unzip file: " + filePath);
                     process.exit(1);
                 }
 
@@ -105,7 +103,7 @@ namespace Loader {
     }
 
     function unzipFile(filePath:string, dir:string) {
-        console.log("unzipping... " + filePath);
+        terminal.log("unzipping... " + filePath);
         let zip = new AdmZip(filePath);
         let entries = zip.getEntries();
         let rootNames:string[] = [];
@@ -161,15 +159,14 @@ namespace Loader {
     function loadSingleFile(url:string, filePath:string, callback:(error?:Error) => void, options?:any) {
         let retryTimes = 0;
         terminal.saveCursor();
-        console.log("downloading... " + url);
+        terminal.log("downloading... " + url);
         loadSingleFileWithTimeOut(url, filePath, onFinish, options);
         function onFinish(error?:Error) {
-            terminal.restoreCursor();
-            terminal.eraseDisplayBelow();
+            terminal.restoreCursorAndClear();
             if (error && error.message == "timeout" && retryTimes < 3) {
                 retryTimes++;
                 terminal.saveCursor();
-                console.log("download retry " + retryTimes + "... " + url);
+                terminal.log("download retry " + retryTimes + "... " + url);
                 loadSingleFileWithTimeOut(url, filePath, onFinish, options);
             } else {
                 callback(error);
@@ -182,12 +179,13 @@ namespace Loader {
         try {
             Utils.createDirectory(path.dirname(filePath));
         } catch (e) {
-            console.log("Cannot create directory: " + path.dirname(filePath));
+            terminal.log("Cannot create directory: " + path.dirname(filePath));
             process.exit(1);
         }
 
         let file = fs.createWriteStream(filePath, options);
         let outputError:Error;
+        let hasProgressBar = false;
         file.on("close", function () {
             callback && callback(outputError);
         });
@@ -202,14 +200,17 @@ namespace Loader {
                 complete: '█',
                 incomplete: '░',
                 width: 80,
-                total: length
+                total: length,
+                clear:true
             });
+            hasProgressBar = true;
             response.on('data', function (chunk) {
                 file.write(chunk);
                 bar.tick(chunk.length);
             });
             response.on('end', function () {
                 file.end();
+
             });
             response.on('error', function (error:Error) {
                 file.close();
