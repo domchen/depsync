@@ -28,7 +28,7 @@ namespace Program {
 
     let fs = require("fs");
     let path = require("path");
-    const VERSION = "1.0.5";
+    const VERSION = "1.0.6";
 
     export function run(args:string[]):void {
         let commandOptions = CommandLine.parse(args);
