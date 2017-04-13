@@ -63,6 +63,9 @@ class Terminal {
                 lines.pop();
             }
             let columns = this.stdout.columns;
+            if(process.platform=="win32"){
+                columns--;
+            }
             let lineCount = 0;
             for (let line of lines) {
                 while (line.length > columns) {

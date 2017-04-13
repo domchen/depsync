@@ -196,12 +196,14 @@ namespace Loader {
                 return;
             }
             let length = parseInt(response.headers['content-length'], 10);
+            let complete = process.platform == "win32" ? "#" : '█';
+            let incomplete = process.platform == "win32" ? "=" : '░';
             let bar = new ProgressBar(':bar [ :percent | :current/:total | :etas ] ', {
-                complete: '█',
-                incomplete: '░',
+                complete: complete,
+                incomplete: incomplete,
                 width: 80,
                 total: length,
-                clear:true
+                clear: true
             });
             hasProgressBar = true;
             response.on('data', function (chunk) {
