@@ -48,24 +48,21 @@ function unzipFile(filePath, dir) {
     let zip = new AdmZip(filePath);
     let entries = zip.getEntries();
     let rootNames = [];
-    for (let _i = 0, entries_1 = entries; _i < entries_1.length; _i++) {
-        let entry = entries_1[_i];
+    for (let entry of entries) {
         let entryName = getEntryName(entry);
         if (!entryName) {
             continue;
         }
-        let name_1 = entryName.split("\\").join("/").split("/")[0];
-        if (rootNames.indexOf(name_1) === -1) {
-            rootNames.push(name_1);
+        let name = entryName.split("\\").join("/").split("/")[0];
+        if (rootNames.indexOf(name) === -1) {
+            rootNames.push(name);
         }
     }
-    for (let _a = 0, rootNames_1 = rootNames; _a < rootNames_1.length; _a++) {
-        let name_2 = rootNames_1[_a];
-        let targetPath = path.resolve(dir, name_2);
+    for (let name of rootNames) {
+        let targetPath = path.resolve(dir, name);
         File.deletePath(targetPath);
     }
-    for (let _b = 0, entries_2 = entries; _b < entries_2.length; _b++) {
-        let entry = entries_2[_b];
+    for (let entry of entries) {
         let entryName = getEntryName(entry);
         if (!entryName) {
             continue;
@@ -184,8 +181,7 @@ function doDownloadFiles(list, callback) {
     File.deletePath(filePath);
     if (item.multipart) {
         let urls = [];
-        for (let _i = 0, _a = item.multipart; _i < _a.length; _i++) {
-            let tail = _a[_i];
+        for (let tail of item.multipart) {
             urls.push(item.url + tail);
         }
         loadMultiParts(urls, filePath, onFinish);

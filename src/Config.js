@@ -72,10 +72,8 @@ Config.prototype.parseFiles = function (vars, files, projectPath) {
     let path = require("path");
     let downloads = [];
     let platforms = Object.keys(files);
-    for (let _i = 0, platforms_1 = platforms; _i < platforms_1.length; _i++) {
-        let platform = platforms_1[_i];
-        for (let _a = 0, _b = files[platform]; _a < _b.length; _a++) {
-            let item = _b[_a];
+    for (let platform of platforms) {
+        for (let item of files[platform]) {
             downloads.push(item);
             item.url = this.formatString(item.url, vars);
             item.dir = this.formatString(item.dir, vars);
@@ -100,10 +98,8 @@ Config.prototype.parseActions = function (vars, actions, projectPath) {
     let path = require("path");
     let list = [];
     let platforms = Object.keys(actions);
-    for (let _i = 0, platforms_2 = platforms; _i < platforms_2.length; _i++) {
-        let platform = platforms_2[_i];
-        for (let _a = 0, _b = actions[platform]; _a < _b.length; _a++) {
-            let item = _b[_a];
+    for (let platform of platforms) {
+        for (let item of actions[platform]) {
             list.push(item);
             item.command = this.formatString(item.command, vars);
             item.dir = this.formatString(item.dir, vars);

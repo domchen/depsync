@@ -109,6 +109,8 @@ function parse(args) {
             options.platform = "mac";
         } else if (p === "win32") {
             options.platform = "win";
+        } else if (p === "linux") {
+            options.platform = "linux";
         }
     }
     return options;

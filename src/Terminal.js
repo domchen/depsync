@@ -48,8 +48,7 @@ Terminal.prototype.restoreCursorAndClear = function () {
             columns--;
         }
         let lineCount = 0;
-        for (let _i = 0, lines_1 = lines; _i < lines_1.length; _i++) {
-            let line = lines_1[_i];
+        for (let line of lines) {
             while (line.length > columns) {
                 line = line.substr(columns);
                 lineCount++;

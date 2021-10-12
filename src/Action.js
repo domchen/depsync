@@ -53,8 +53,7 @@ function executeActions(list, platform, callback) {
         list = [];
     }
     let actions = [];
-    for (let _i = 0, list_2 = list; _i < list_2.length; _i++) {
-        let item = list_2[_i];
+    for (let item of list) {
         if (item.platform === platform || item.platform === "common") {
             actions.push(item);
         }

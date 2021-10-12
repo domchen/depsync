@@ -25,9 +25,9 @@ For example, if you want to synchronize the mac platform, run:
 depsync mac
 ```
 
-If you don't pass any platform parameter, it will automatically choose the host platform as the target platform. So that the result of running `depsync` in macOS is the same as running `depsync mac`.
+If you don't pass any platform parameter, it will automatically choose the host platform as the target platform. So the result of running `depsync` in macOS is the same to running `depsync mac`.
 
-The available platform names are defined in the DEPS file, you can also define any other platform names as you want, such as `ios`, `android`, `linux`... but only the `mac` and `win` can be automatically chosen.
+The available platform names are defined in the DEPS file, you can also define any other platform names as you want, such as `ios`, `android`... but only the `mac`, `win` and `linux` can be automatically chosen.
 
 Here is an example of DEPS file:
 

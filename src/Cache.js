@@ -41,8 +41,7 @@ function clean(downloads) {
     for (let i = data.downloads.length - 1; i >= 0; i--) {
         let item = data.downloads[i];
         let found = false;
-        for (let _i = 0, downloads_1 = downloads; _i < downloads_1.length; _i++) {
-            let downloadItem = downloads_1[_i];
+        for (let downloadItem of  downloads) {
             if (downloadItem.url === item.url) {
                 found = true;
                 break;
@@ -58,8 +57,7 @@ function clean(downloads) {
 function isDownloaded(targetItem) {
     let data = readCache();
     let cachedItem;
-    for (let _i = 0, _a = data.downloads; _i < _a.length; _i++) {
-        let item = _a[_i];
+    for (let item of data.downloads) {
         if (item.url === targetItem.url) {
             cachedItem = item;
             break;
@@ -73,8 +71,7 @@ function isDownloaded(targetItem) {
             return false;
         }
         let index = 0;
-        for (let _b = 0, _c = cachedItem.multipart; _b < _c.length; _b++) {
-            let part = _c[_b];
+        for (let part of cachedItem.multipart) {
             if (part !== targetItem.multipart[index]) {
                 return false;
             }
@@ -89,8 +86,7 @@ function isDownloaded(targetItem) {
 function finishDownload(targetItem) {
     let data = readCache();
     let index = 0;
-    for (let _i = 0, _a = data.downloads; _i < _a.length; _i++) {
-        let item = _a[_i];
+    for (let item of data.downloads) {
         if (item.url === targetItem.url) {
             data.downloads.splice(index, 1);
             break;
