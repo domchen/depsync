@@ -24,41 +24,42 @@
 //
 //////////////////////////////////////////////////////////////////////////////////////
 
-namespace Action {
+const childProcess = require('child_process');
+const terminal = require('./Terminal')
 
-    let childProcess = require('child_process');
-
-    export function executeActions(list:ActionItem[], platform:string, callback:() => void) {
-        if (!list) {
-            list = [];
-        }
-        let actions:ActionItem[] = [];
-        for (let item of list) {
-            if (item.platform == platform || item.platform == "common") {
-                actions.push(item);
-            }
-        }
-        doExecuteActions(actions, callback);
+function doExecuteActions(list, callback) {
+    if (list.length === 0) {
+        callback && callback();
+        return;
     }
+    let item = list.shift();
+    // terminal.saveCursor();
+    terminal.log("【depsync】executing action: " + item.command);
+    childProcess.exec(item.command, {cwd: item.dir}, onFinish);
 
-    function doExecuteActions(list:ActionItem[], callback:() => void) {
-        if (list.length == 0) {
-            callback && callback();
-            return;
+    function onFinish(error, stdout, stderr) {
+        terminal.log(stdout);
+        if (error) {
+            terminal.error(stderr);
+            process.exit(1);
         }
-        let item = list.shift();
-        terminal.saveCursor();
-        terminal.log("executing... " + item.command);
-        childProcess.exec(item.command, {cwd: item.dir}, onFinish)
-
-        function onFinish(error:Error, stdout:string, stderr:string) {
-            if (error) {
-                terminal.error(stderr);
-                terminal.log(stdout);
-                process.exit(1);
-            }
-            terminal.restoreCursorAndClear();
-            doExecuteActions(list, callback);
-        }
+        // terminal.restoreCursorAndClear();
+        doExecuteActions(list, callback);
     }
 }
+
+function executeActions(list, platform, callback) {
+    if (!list) {
+        list = [];
+    }
+    let actions = [];
+    for (let _i = 0, list_2 = list; _i < list_2.length; _i++) {
+        let item = list_2[_i];
+        if (item.platform === platform || item.platform === "common") {
+            actions.push(item);
+        }
+    }
+    doExecuteActions(actions, callback);
+}
+
+exports.executeActions = executeActions;

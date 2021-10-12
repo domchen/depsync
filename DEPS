@@ -1,30 +1,30 @@
 {
-  "version": "1.0.5",
+  "version": "1.0.7",
   "vars": {
-    "SKIA_ROOT": "https://raw.githubusercontent.com/domchen/libskia/release",
-    "V8_ROOT": "https://raw.githubusercontent.com/domchen/libv8/release"
+    "SKIA_ROOT": "https://github.com/domchen/depsync/releases/download/1.0.1",
+    "V8_ROOT": "https://github.com/domchen/depsync/releases/download/1.0.2"
   },
   "files": {
     "common": [
       {
-        "url": "${SKIA_ROOT}/m58/include.zip",
+        "url": "${SKIA_ROOT}/include.zip",
         "dir": "third_party/skia",
         "unzip": true
       },
       {
-        "url": "${V8_ROOT}/5.7.492/include.zip",
+        "url": "${V8_ROOT}/include.zip",
         "dir": "third_party/v8",
         "unzip": "true"
       }
     ],
     "mac": [
       {
-        "url": "${SKIA_ROOT}/m58/darwin-x64.zip",
+        "url": "${SKIA_ROOT}/darwin-x64.zip",
         "dir": "third_party/skia",
         "unzip": true
       },
       {
-        "url": "${V8_ROOT}/5.7.492/darwin-x64.zip",
+        "url": "${V8_ROOT}/darwin-x64.zip",
         "multipart": [
           ".001",
           ".002",
@@ -36,12 +36,12 @@
     ],
     "win": [
       {
-        "url": "${SKIA_ROOT}/m58/win-ia32.zip",
+        "url": "${SKIA_ROOT}/win-ia32.zip",
         "dir": "third_party/skia",
         "unzip": true
       },
       {
-        "url": "${V8_ROOT}/5.7.492/win-ia32.zip",
+        "url": "${V8_ROOT}/win-ia32.zip",
         "dir": "third_party/v8",
         "unzip": true
       }
@@ -54,7 +54,7 @@
         "dir": "./"
       },
       {
-        "command": "node node_modules/tspack/bin/tspack",
+        "command": "node node_modules/tspack/bin/tspack --v",
         "dir": "./"
       }
     ]

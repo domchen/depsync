@@ -1,2 +1,3 @@
 #!/usr/bin/env node
-require('../lib/depsync.js');
+const Program = require('../src/Program.js');
+Program.run(process.argv.slice(2));

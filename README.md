@@ -1,8 +1,6 @@
 <p align="left">
-  <a href="https://travis-ci.org/domchen/depsync"><img src="https://img.shields.io/travis/domchen/depsync/master.svg" alt="Build Status"></a>
   <a href="https://www.npmjs.com/package/depsync"><img src="https://img.shields.io/npm/v/depsync.svg" alt="Version"></a>
   <a href="https://github.com/domchen/depsync/blob/master/LICENSE"><img src="https://img.shields.io/npm/l/depsync.svg" alt="License"></a>
-  <a href="https://github.com/Microsoft/Typescript"><img src="https://img.shields.io/badge/code-TypeScript-blue.svg" alt="TypeScript"></a>
 </p>
 
 # Introduction
@@ -35,31 +33,32 @@ Here is an example of DEPS file:
 
 ```json
 {
+  "version": "1.0.7",
   "vars": {
-    "SKIA_ROOT": "https://raw.githubusercontent.com/domchen/libskia/release",
-    "V8_ROOT": "https://raw.githubusercontent.com/domchen/libv8/release"
+    "SKIA_ROOT": "https://github.com/domchen/depsync/releases/download/1.0.1",
+    "V8_ROOT": "https://github.com/domchen/depsync/releases/download/1.0.2"
   },
   "files": {
     "common": [
       {
-        "url": "${SKIA_ROOT}/m58/include.zip",
+        "url": "${SKIA_ROOT}/include.zip",
         "dir": "third_party/skia",
         "unzip": true
       },
       {
-        "url": "${V8_ROOT}/5.7.492/include.zip",
+        "url": "${V8_ROOT}/include.zip",
         "dir": "third_party/v8",
         "unzip": "true"
       }
     ],
     "mac": [
       {
-        "url": "${SKIA_ROOT}/m58/darwin-x64.zip",
+        "url": "${SKIA_ROOT}/darwin-x64.zip",
         "dir": "third_party/skia",
         "unzip": true
       },
       {
-        "url": "${V8_ROOT}/5.7.492/darwin-x64.zip",
+        "url": "${V8_ROOT}/darwin-x64.zip",
         "multipart": [
           ".001",
           ".002",
@@ -71,28 +70,28 @@ Here is an example of DEPS file:
     ],
     "win": [
       {
-        "url": "${SKIA_ROOT}/m58/win-ia32.zip",
+        "url": "${SKIA_ROOT}/win-ia32.zip",
         "dir": "third_party/skia",
         "unzip": true
       },
       {
-        "url": "${V8_ROOT}/5.7.492/win-ia32.zip",
+        "url": "${V8_ROOT}/win-ia32.zip",
         "dir": "third_party/v8",
         "unzip": true
       }
     ]
   },
   "actions": {
-       "common": [
-         {
-           "command": "npm install tspack",
-           "dir": "./"
-         },
-         {
-           "command": "node node_modules/tspack/bin/tspack",
-           "dir": "./"
-         }
-       ]
-     }
+    "common": [
+      {
+        "command": "npm install tspack",
+        "dir": "./"
+      },
+      {
+        "command": "node node_modules/tspack/bin/tspack --v",
+        "dir": "./"
+      }
+    ]
+  }
 }
 ```
