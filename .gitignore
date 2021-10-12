@@ -7,3 +7,5 @@ node_modules
 /third_party
 DEPS.cache
 npm-debug.log
+package-lock.json
+
