@@ -25,26 +25,11 @@
 //////////////////////////////////////////////////////////////////////////////////////
 
 const File = require('./File')
-const terminal = require('./Terminal')
+const fs = require("fs");
+const path = require("path");
+const crypto = require('crypto')
 
-function Config(configFileName) {
-    let data;
-    try {
-        let fs = require("fs");
-        let jsonText = fs.readFileSync(configFileName, "utf-8");
-        data = JSON.parse(jsonText);
-    } catch (e) {
-        terminal.log("The DEPS config file is not a JSON file: " + configFileName);
-        process.exit(1);
-    }
-    let path = require("path");
-    let projectPath = path.dirname(configFileName);
-    this.parse(data, projectPath);
-}
-
-Config.findConfigFile = function (searchPath) {
-    let fs = require("fs");
-    let path = require("path");
+function findConfigFile(searchPath) {
     while (true) {
         let fileName = File.joinPath(searchPath, "DEPS");
         if (fs.existsSync(fileName)) {
@@ -57,60 +42,68 @@ Config.findConfigFile = function (searchPath) {
         searchPath = parentPath;
     }
     return "";
-};
+}
 
-Config.prototype.parse = function (data, projectPath) {
-    this.version = data.version ? data.version : "0.0.0";
-    this.files = this.parseFiles(data.vars, data.files, projectPath);
-    this.actions = this.parseActions(data.vars, data.actions, projectPath);
-};
+function getHash(content) {
+    let hash = crypto.createHash('sha1')
+    hash.update(content)
+    return hash.digest('hex')
+}
 
-Config.prototype.parseFiles = function (vars, files, projectPath) {
-    if (!files) {
+function filterByHash(items) {
+    if (!items) {
         return [];
     }
-    let path = require("path");
-    let downloads = [];
-    let platforms = Object.keys(files);
-    for (let platform of platforms) {
-        for (let item of files[platform]) {
-            downloads.push(item);
-            item.url = this.formatString(item.url, vars);
-            item.dir = this.formatString(item.dir, vars);
-            item.dir = path.resolve(projectPath, item.dir);
-            let unzip = item.unzip;
-            if (typeof unzip == "string") {
-                unzip = this.formatString(unzip, vars);
-                item.unzip = (unzip === "true");
-            } else if (typeof unzip != "boolean") {
-                item.unzip = false;
-            }
-            item.platform = platform;
-        }
-    }
-    return downloads;
-};
-
-Config.prototype.parseActions = function (vars, actions, projectPath) {
-    if (!actions) {
-        return [];
-    }
-    let path = require("path");
     let list = [];
-    let platforms = Object.keys(actions);
-    for (let platform of platforms) {
-        for (let item of actions[platform]) {
+    for (let item of items) {
+        let cache = File.readFile(item.hashFile);
+        if (cache !== item.hash) {
             list.push(item);
-            item.command = this.formatString(item.command, vars);
-            item.dir = this.formatString(item.dir, vars);
-            item.dir = path.resolve(projectPath, item.dir);
-            item.platform = platform;
         }
     }
     return list;
-};
+}
 
-Config.prototype.formatString = function (text, vars) {
+
+function parseFiles(files, vars, projectPath) {
+    if (!files) {
+        return [];
+    }
+    let downloads = [];
+    for (let item of files) {
+        downloads.push(item);
+        item.url = formatString(item.url, vars);
+        item.dir = formatString(item.dir, vars);
+        item.hash = getHash(item.url);
+        item.dir = path.resolve(projectPath, item.dir);
+        item.hashFile = "." + path.basename(item.url) + ".sha1";
+        item.hashFile = path.resolve(item.dir, item.hashFile);
+        let unzip = item.unzip;
+        if (typeof unzip == "string") {
+            unzip = formatString(unzip, vars);
+            item.unzip = (unzip === "true");
+        } else if (typeof unzip != "boolean") {
+            item.unzip = false;
+        }
+    }
+    return filterByHash(downloads);
+}
+
+function parseActions(actions, vars, projectPath) {
+    if (!actions) {
+        return [];
+    }
+    let list = [];
+    for (let item of actions) {
+        list.push(item);
+        item.command = formatString(item.command, vars);
+        item.dir = formatString(item.dir, vars);
+        item.dir = path.resolve(projectPath, item.dir);
+    }
+    return list;
+}
+
+function formatString(text, vars) {
     let index = text.indexOf("${");
     while (index !== -1) {
         let prefix = text.substring(0, index);
@@ -127,6 +120,41 @@ Config.prototype.formatString = function (text, vars) {
         index = text.indexOf("${");
     }
     return text;
-};
+}
 
-module.exports = Config;
+function filterByPlatform(items, hostPlatform) {
+    if (!items) {
+        return [];
+    }
+    let list = [];
+    let platforms = Object.keys(items);
+    for (let platform of platforms) {
+        if (platform === hostPlatform || platform === "common") {
+            for (let item of items[platform]) {
+                list.push(item);
+            }
+        }
+    }
+    return list;
+}
+
+function parse(configFileName, platform) {
+    let data;
+    try {
+        let jsonText = File.readFile(configFileName);
+        data = JSON.parse(jsonText);
+    } catch (e) {
+        return null;
+    }
+    let projectPath = path.dirname(configFileName);
+    let config = {};
+    config.version = data.version ? data.version : "0.0.0";
+    let files = filterByPlatform(data.files, platform);
+    config.files = parseFiles(files, data.vars, projectPath);
+    let actions = filterByPlatform(data.actions, platform);
+    config.actions = parseActions(actions, data.vars, projectPath);
+    return config;
+}
+
+exports.findConfigFile = findConfigFile;
+exports.parse = parse;

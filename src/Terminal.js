@@ -71,12 +71,20 @@ Terminal.formatString = function (format) {
     return objects.join(' ');
 };
 
-Terminal.prototype.log = function (message) {
-    let text = Terminal.formatString.apply(this, arguments);
+Terminal.prototype.writeStdout = function (text) {
     if (this.needSave) {
-        this.savedString += text + "\n";
+        this.savedString += text;
     }
-    this.stdout.write(text + "\n");
+    this.stdout.write(text);
+};
+
+Terminal.prototype.writeStderr = function (text) {
+    this.stderr.write(text);
+};
+
+Terminal.prototype.log = function (message) {
+    let text = Terminal.formatString.apply(this, arguments) + "\n";
+    this.writeStdout(text);
 };
 
 Terminal.prototype.assert = function (assertion, message) {
@@ -86,13 +94,13 @@ Terminal.prototype.assert = function (assertion, message) {
 };
 
 Terminal.prototype.warn = function (message) {
-    let text = Terminal.formatString.apply(this, arguments);
-    this.stderr.write(text + "\n");
+    let text = Terminal.formatString.apply(this, arguments) + "\n";
+    this.writeStderr(text);
 };
 
 Terminal.prototype.error = function (message) {
-    let text = Terminal.formatString.apply(this, arguments);
-    this.stderr.write(text + "\n");
+    let text = Terminal.formatString.apply(this, arguments) + "\n";
+    this.writeStderr(text);
 };
 
 module.exports = new Terminal(process.stdout, process.stderr);

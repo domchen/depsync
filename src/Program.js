@@ -25,13 +25,11 @@
 //////////////////////////////////////////////////////////////////////////////////////
 
 const fs = require("fs");
-const path = require("path");
 const terminal = require('./Terminal')
 const File = require('./File')
 const Action = require('./Action')
 const CommandLine = require('./CommandLine')
 const Config = require('./Config')
-const Cache = require('./Cache')
 const Loader = require('./Loader')
 const VERSION = "1.0.7";
 
@@ -105,11 +103,7 @@ function run(args) {
     }
     let configFileName = "";
     if (commandOptions.project) {
-        if (!commandOptions.project || fs.existsSync(commandOptions.project)) {
-            configFileName = File.joinPath(commandOptions.project, "DEPS");
-        } else {
-            configFileName = commandOptions.project;
-        }
+        configFileName = File.joinPath(commandOptions.project, "DEPS");
         if (!fs.existsSync(configFileName)) {
             terminal.log("Cannot find a DEPS file at the specified directory: " + commandOptions.project + "\n");
             process.exit(1);
@@ -123,18 +117,19 @@ function run(args) {
             return;
         }
     }
-    let config = new Config(configFileName);
+    let config = Config.parse(configFileName, commandOptions.platform);
+    if (!config) {
+        terminal.log("The DEPS config file is not a valid JSON file: " + configFileName);
+        process.exit(1);
+    }
     if (compareVersion(VERSION, config.version) < 0) {
         terminal.log("DEPS file requires version: " + config.version);
         terminal.log("The current depsync version: " + VERSION);
         terminal.log("Please update the depsync tool and then try again.");
         process.exit(1);
     }
-    Cache.initCache(configFileName);
-    Loader.downloadFiles(config.files, commandOptions.platform, function () {
-        Action.executeActions(config.actions, commandOptions.platform, function () {
-            Cache.clean(config.files);
-        });
+    Loader.downloadFiles(config.files, function () {
+        Action.executeActions(config.actions);
     });
 }
 

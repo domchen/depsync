@@ -124,15 +124,17 @@ function deletePath(path) {
     }
 }
 
-function writeFileTo(filePath, content, overwrite, mode) {
+function readFile(filePath) {
+    try {
+        return fs.readFileSync(filePath, "utf-8");
+    } catch (e) {
+        return "";
+    }
+}
+
+function writeFile(filePath, content) {
     if (fs.existsSync(filePath)) {
-        if (!overwrite) {
-            return false;
-        }
-        let stat = fs.statSync(filePath);
-        if (stat.isDirectory()) {
-            return false;
-        }
+        deletePath(filePath);
     }
     let folder = path.dirname(filePath);
     if (!fs.existsSync(folder)) {
@@ -153,11 +155,20 @@ function writeFileTo(filePath, content, overwrite, mode) {
         }
         fs.closeSync(fd);
     }
-    fs.chmodSync(filePath, mode || 438);
+    fs.chmodSync(filePath, 438);
     return true;
+}
+
+function writeHash(item) {
+    if (!item || !item.hashFile || !item.hash) {
+        return;
+    }
+    writeFile(item.hashFile, item.hash);
 }
 
 exports.joinPath = joinPath;
 exports.createDirectory = createDirectory;
 exports.deletePath = deletePath;
-exports.writeFileTo = writeFileTo;
+exports.readFile = readFile;
+exports.writeFile = writeFile;
+exports.writeHash = writeHash;

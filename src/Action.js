@@ -27,38 +27,28 @@
 const childProcess = require('child_process');
 const terminal = require('./Terminal')
 
-function doExecuteActions(list, callback) {
+function executeActions(list, callback) {
     if (list.length === 0) {
         callback && callback();
         return;
     }
     let item = list.shift();
-    // terminal.saveCursor();
-    terminal.log("【depsync】executing action: " + item.command);
-    childProcess.exec(item.command, {cwd: item.dir}, onFinish);
-
-    function onFinish(error, stdout, stderr) {
-        terminal.log(stdout);
-        if (error) {
-            terminal.error(stderr);
+    terminal.saveCursor();
+    terminal.log("【depsync】executing action: " + item.command + " " + item.args.join(" "));
+    let shell = childProcess.spawn(item.command, item.args, {cwd: item.dir, env: process.env});
+    shell.stdout.on('data', (data) => {
+        terminal.writeStdout(data);
+    });
+    shell.stderr.on('data', (data) => {
+        terminal.writeStderr(data);
+    })
+    shell.on('close', (code) => {
+        if (code !== 0) {
             process.exit(1);
         }
-        // terminal.restoreCursorAndClear();
-        doExecuteActions(list, callback);
-    }
-}
-
-function executeActions(list, platform, callback) {
-    if (!list) {
-        list = [];
-    }
-    let actions = [];
-    for (let item of list) {
-        if (item.platform === platform || item.platform === "common") {
-            actions.push(item);
-        }
-    }
-    doExecuteActions(actions, callback);
+        terminal.restoreCursorAndClear();
+        executeActions(list, callback);
+    })
 }
 
 exports.executeActions = executeActions;

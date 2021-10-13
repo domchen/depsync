@@ -28,10 +28,8 @@ const fs = require('fs');
 const http = require('follow-redirects').http;
 const https = require('follow-redirects').https;
 const path = require("path");
-const readLine = require("readline");
 const AdmZip = require('adm-zip');
 const ProgressBar = require("progress");
-const Cache = require('./Cache')
 const File = require('./File')
 const terminal = require('./Terminal')
 
@@ -76,7 +74,7 @@ function unzipFile(filePath, dir) {
         if (!content) {
             throw new Error("Cannot unzip file:" + filePath);
         }
-        File.writeFileTo(targetPath, content, true);
+        File.writeFile(targetPath, content);
     }
     File.deletePath(filePath);
 }
@@ -166,16 +164,12 @@ function loadSingleFileWithTimeOut(url, filePath, callback, options) {
 }
 
 
-function doDownloadFiles(list, callback) {
+function downloadFiles(list, callback) {
     if (list.length === 0) {
         callback && callback();
         return;
     }
     let item = list.shift();
-    if (Cache.isDownloaded(item)) {
-        doDownloadFiles(list, callback);
-        return;
-    }
     let fileName = item.url.split("?")[0];
     let filePath = path.resolve(item.dir, path.basename(fileName));
     File.deletePath(filePath);
@@ -206,22 +200,9 @@ function doDownloadFiles(list, callback) {
                 process.exit(1);
             }
         }
-        Cache.finishDownload(item);
-        doDownloadFiles(list, callback);
+        File.writeHash(item);
+        downloadFiles(list, callback);
     }
-}
-
-function downloadFiles(list, platform, callback) {
-    if (!list) {
-        list = [];
-    }
-    let files = [];
-    for (let item of list) {
-        if (platform === item.platform || item.platform === "common") {
-            files.push(item);
-        }
-    }
-    doDownloadFiles(files, callback);
 }
 
 exports.downloadFiles = downloadFiles;
