@@ -24,14 +24,14 @@
 //
 //////////////////////////////////////////////////////////////////////////////////////
 
-const File = require('./File')
+const Utils = require('./Utils')
 const fs = require("fs");
 const path = require("path");
 const crypto = require('crypto')
 
 function findConfigFile(searchPath) {
     while (true) {
-        let fileName = File.joinPath(searchPath, "DEPS");
+        let fileName = Utils.joinPath(searchPath, "DEPS");
         if (fs.existsSync(fileName)) {
             return fileName;
         }
@@ -56,7 +56,7 @@ function filterByHash(items) {
     }
     let list = [];
     for (let item of items) {
-        let cache = File.readFile(item.hashFile);
+        let cache = Utils.readFile(item.hashFile);
         if (cache !== item.hash) {
             list.push(item);
         }
@@ -141,7 +141,7 @@ function filterByPlatform(items, hostPlatform) {
 function parse(configFileName, platform) {
     let data;
     try {
-        let jsonText = File.readFile(configFileName);
+        let jsonText = Utils.readFile(configFileName);
         data = JSON.parse(jsonText);
     } catch (e) {
         return null;

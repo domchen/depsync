@@ -26,11 +26,11 @@
 
 const fs = require("fs");
 const terminal = require('./Terminal')
-const File = require('./File')
+const Utils = require('./Utils')
 const Action = require('./Action')
 const CommandLine = require('./CommandLine')
 const Config = require('./Config')
-const Loader = require('./Loader')
+const File = require('./File')
 const VERSION = "1.0.7";
 
 function printVersion() {
@@ -103,7 +103,7 @@ function run(args) {
     }
     let configFileName = "";
     if (commandOptions.project) {
-        configFileName = File.joinPath(commandOptions.project, "DEPS");
+        configFileName = Utils.joinPath(commandOptions.project, "DEPS");
         if (!fs.existsSync(configFileName)) {
             terminal.log("Cannot find a DEPS file at the specified directory: " + commandOptions.project + "\n");
             process.exit(1);
@@ -128,7 +128,7 @@ function run(args) {
         terminal.log("Please update the depsync tool and then try again.");
         process.exit(1);
     }
-    Loader.downloadFiles(config.files, function () {
+    File.downloadFiles(config.files, () => {
         Action.executeActions(config.actions);
     });
 }

@@ -24,151 +24,185 @@
 //
 //////////////////////////////////////////////////////////////////////////////////////
 
-const fs = require("fs");
+const fs = require('fs');
+const http = require('follow-redirects').http;
+const https = require('follow-redirects').https;
 const path = require("path");
-const SEPARATOR = "/";
+const AdmZip = require('adm-zip');
+const ProgressBar = require("progress");
+const Utils = require('./Utils')
+const terminal = require('./Terminal')
 
-function getRootLength(path) {
-    if (path.charAt(0) === "/") {
-        if (path.charAt(1) !== "/")
-            return 1;
-        let p1 = path.indexOf("/", 2);
-        if (p1 < 0)
-            return 2;
-        let p2 = path.indexOf("/", p1 + 1);
-        if (p2 < 0)
-            return p1 + 1;
-        return p2 + 1;
-    }
-    if (path.charAt(1) === ":") {
-        if (path.charAt(2) === "/")
-            return 3;
-        return 2;
-    }
-    if (path.lastIndexOf("file:///", 0) === 0) {
-        return "file:///".length;
-    }
-    let idx = path.indexOf("://");
-    if (idx !== -1) {
-        return idx + "://".length;
-    }
-    return 0;
-}
-
-function joinPath(path1, path2) {
-    if (!(path1 && path1.length))
-        return path2;
-    if (!(path2 && path2.length))
-        return path1;
-    path1 = path1.split("\\").join(SEPARATOR);
-    path2 = path2.split("\\").join(SEPARATOR);
-    if (getRootLength(path2) !== 0)
-        return path2;
-    if (path1.charAt(path1.length - 1) === SEPARATOR)
-        return path1 + path2;
-    return path1 + SEPARATOR + path2;
-}
-
-function createDirectory(filePath, mode) {
-    if (mode === undefined) {
-        mode = 511 & (~process.umask());
-    }
-    filePath = path.resolve(filePath);
-    try {
-        fs.mkdirSync(filePath, mode);
-    } catch (err0) {
-        switch (err0.code) {
-            case 'ENOENT':
-                createDirectory(path.dirname(filePath), mode);
-                createDirectory(filePath, mode);
-                break;
-            default:
-                let stat = void 0;
-                try {
-                    stat = fs.statSync(filePath);
-                } catch (err1) {
-                    throw err0;
-                }
-                if (!stat.isDirectory()) {
-                    throw err0;
-                }
-                break;
-        }
-    }
-}
-
-function deleteDirectory(path) {
-    let files = [];
-    if (fs.existsSync(path)) {
-        files = fs.readdirSync(path);
-        files.forEach(function (file) {
-            let curPath = path + "/" + file;
-            if (fs.statSync(curPath).isDirectory()) {
-                deleteDirectory(curPath);
-            } else {
-                fs.unlinkSync(curPath);
-            }
-        });
-        fs.rmdirSync(path);
-    }
-}
-
-function deletePath(path) {
-    try {
-        if (fs.lstatSync(path).isDirectory()) {
-            deleteDirectory(path);
-        } else {
-            fs.unlinkSync(path);
-        }
-    } catch (e) {
-    }
-}
-
-function readFile(filePath) {
-    try {
-        return fs.readFileSync(filePath, "utf-8");
-    } catch (e) {
+function getEntryName(entry) {
+    let entryName = entry.entryName.toString();
+    if (entryName.substr(0, 8) === "__MACOSX" || entryName.substr(entryName.length - 9, 9) === ".DS_Store") {
         return "";
     }
+    return entryName;
 }
 
-function writeFile(filePath, content) {
-    if (fs.existsSync(filePath)) {
-        deletePath(filePath);
-    }
-    let folder = path.dirname(filePath);
-    if (!fs.existsSync(folder)) {
-        createDirectory(folder);
-    }
-    let fd;
-    try {
-        fd = fs.openSync(filePath, 'w', 438);
-    } catch (e) {
-        fs.chmodSync(filePath, 438);
-        fd = fs.openSync(filePath, 'w', 438);
-    }
-    if (fd) {
-        if (typeof content == "string") {
-            fs.writeSync(fd, content, 0, 'utf8');
-        } else {
-            fs.writeSync(fd, content, 0, content.length, 0);
+function unzipFile(filePath, dir) {
+    terminal.log("【depsync】unzipping file: " + filePath);
+    let zip = new AdmZip(filePath);
+    let entries = zip.getEntries();
+    let rootNames = [];
+    for (let entry of entries) {
+        let entryName = getEntryName(entry);
+        if (!entryName) {
+            continue;
         }
-        fs.closeSync(fd);
+        let name = entryName.split("\\").join("/").split("/")[0];
+        if (rootNames.indexOf(name) === -1) {
+            rootNames.push(name);
+        }
     }
-    fs.chmodSync(filePath, 438);
-    return true;
+    for (let name of rootNames) {
+        let targetPath = path.resolve(dir, name);
+        Utils.deletePath(targetPath);
+    }
+    for (let entry of entries) {
+        let entryName = getEntryName(entry);
+        if (!entryName) {
+            continue;
+        }
+        let targetPath = path.resolve(dir, entryName);
+        if (entry.isDirectory) {
+            Utils.createDirectory(targetPath);
+            continue;
+        }
+        let content = entry.getData();
+        if (!content) {
+            throw new Error("Cannot unzip file:" + filePath);
+        }
+        Utils.writeFile(targetPath, content);
+    }
+    Utils.deletePath(filePath);
 }
 
-function writeHash(item) {
-    if (!item || !item.hashFile || !item.hash) {
+function loadMultiParts(urls, filePath, callback) {
+    if (urls.length === 0) {
+        callback && callback();
         return;
     }
-    writeFile(item.hashFile, item.hash);
+    let url = urls.shift();
+    loadSingleFile(url, filePath, function (error) {
+        if (error) {
+            callback && callback(error);
+            return;
+        }
+        loadMultiParts(urls, filePath, callback);
+    }, {flags: 'a'});
 }
 
-exports.joinPath = joinPath;
-exports.createDirectory = createDirectory;
-exports.deletePath = deletePath;
-exports.readFile = readFile;
-exports.writeFile = writeFile;
-exports.writeHash = writeHash;
+function loadSingleFile(url, filePath, callback, options) {
+    let retryTimes = 0;
+    terminal.saveCursor();
+    terminal.log("【depsync】downloading file: " + url);
+    loadSingleFileWithTimeOut(url, filePath, onFinish, options);
+
+    function onFinish(error) {
+        terminal.restoreCursorAndClear();
+        if (error && error.message === "timeout" && retryTimes < 3) {
+            retryTimes++;
+            terminal.saveCursor();
+            terminal.log("downloading file retry " + retryTimes + ": " + url);
+            loadSingleFileWithTimeOut(url, filePath, onFinish, options);
+        } else {
+            callback(error);
+        }
+    }
+}
+
+function loadSingleFileWithTimeOut(url, filePath, callback, options) {
+    let httpClient = url.slice(0, 5) === 'https' ? https : http;
+    try {
+        Utils.createDirectory(path.dirname(filePath));
+    } catch (e) {
+        terminal.log("Cannot create directory: " + path.dirname(filePath));
+        process.exit(1);
+    }
+    let file = fs.createWriteStream(filePath, options);
+    let outputError;
+    let hasProgressBar = false;
+    file.on("close", function () {
+        callback && callback(outputError);
+    });
+    let request = httpClient.get(url, function (response) {
+        if (response.statusCode >= 400 || response.statusCode === 0) {
+            file.close();
+            outputError = new Error(response.statusMessage);
+            return;
+        }
+        let length = parseInt(response.headers['content-length'], 10);
+        let complete = process.platform === "win32" ? "#" : '█';
+        let incomplete = process.platform === "win32" ? "=" : '░';
+        let bar = new ProgressBar(':bar [ :percent | :current/:total | :etas ] ', {
+            complete: complete,
+            incomplete: incomplete,
+            width: 80,
+            total: length,
+            clear: true
+        });
+        hasProgressBar = true;
+        response.on('data', function (chunk) {
+            file.write(chunk);
+            bar.tick(chunk.length);
+        });
+        response.on('end', function () {
+            file.end();
+        });
+        response.on('error', function (error) {
+            file.close();
+            outputError = error;
+        });
+        request.setTimeout(15000, function () {
+            request.abort();
+            file.close();
+            outputError = new Error("timeout");
+        });
+    });
+}
+
+
+function downloadFiles(list, callback) {
+    if (list.length === 0) {
+        callback && callback();
+        return;
+    }
+    let item = list.shift();
+    let fileName = item.url.split("?")[0];
+    let filePath = path.resolve(item.dir, path.basename(fileName));
+    Utils.deletePath(filePath);
+    if (item.multipart) {
+        let urls = [];
+        for (let tail of item.multipart) {
+            urls.push(item.url + tail);
+        }
+        loadMultiParts(urls, filePath, onFinish);
+    } else {
+        loadSingleFile(item.url, filePath, onFinish);
+    }
+
+    function onFinish(error) {
+        if (error) {
+            terminal.log("【depsync】downloading: " + item.url);
+            terminal.log("Cannot download file : " + error.message);
+            process.exit(1);
+            return;
+        }
+        if (item.unzip) {
+            try {
+                terminal.saveCursor();
+                unzipFile(filePath, item.dir);
+                terminal.restoreCursorAndClear();
+            } catch (e) {
+                terminal.log("Cannot unzip file: " + filePath);
+                process.exit(1);
+            }
+        }
+        Utils.writeHash(item);
+        downloadFiles(list, callback);
+    }
+}
+
+exports.downloadFiles = downloadFiles;

@@ -27,9 +27,5 @@
     "follow-redirects": "latest",
     "progress": "latest",
     "tspack": "^1.0.5"
-  },
-  "devDependencies": {
-    "@types/node": "latest",
-    "@types/progress": "latest"
   }
 }
