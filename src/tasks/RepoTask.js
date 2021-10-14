@@ -30,6 +30,23 @@ const Utils = require("../Utils");
 const TaskRunner = require('./TaskRunner')
 const ShellTask = require('./ShellTask');
 
+function AddLoginInfo(url) {
+    if (url.indexOf("@") !== -1) {
+        return url;
+    }
+    let index = url.indexOf("://");
+    if (index === -1) {
+        return url;
+    }
+    let user = process.env["GIT_USER"];
+    let password = process.env["GIT_PASSWORD"];
+    if (!user || !password) {
+        return url;
+    }
+    url = url.substring(0, index + 3) + user + ":" + password + "@" + url.substring(index + 3);
+    return url;
+}
+
 function RepoTask(item) {
     this.item = item;
 }
@@ -40,9 +57,10 @@ RepoTask.prototype.run = function (callback) {
     terminal.log("【depsync】checking out repository: " + name + "@" + item.commit);
     Utils.deletePath(item.dir);
     Utils.createDirectory(item.dir);
+    let url = AddLoginInfo(item.url);
     let tasks = [];
     tasks.push(new ShellTask("git", ["init", "-q"], item.dir));
-    tasks.push(new ShellTask("git", ["remote", "add", "origin", item.url], item.dir));
+    tasks.push(new ShellTask("git", ["remote", "add", "origin", url], item.dir));
     tasks.push(new ShellTask("git", ["fetch", "--depth", "1", "origin", item.commit], item.dir));
     tasks.push(new ShellTask("git", ["reset", "--hard", "FETCH_HEAD", "-q"], item.dir));
     TaskRunner.runTasks(tasks, () => {

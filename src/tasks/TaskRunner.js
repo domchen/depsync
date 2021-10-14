@@ -24,9 +24,6 @@
 //
 //////////////////////////////////////////////////////////////////////////////////////
 
-const terminal = require("../Terminal");
-const childProcess = require("child_process");
-
 function runTasks(tasks, callback) {
     if (tasks.length === 0) {
         callback && callback();
