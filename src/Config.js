@@ -50,28 +50,12 @@ function getHash(content) {
     return hash.digest('hex')
 }
 
-function filterByHash(items) {
-    if (!items) {
-        return [];
-    }
-    let list = [];
-    for (let item of items) {
-        let cache = Utils.readFile(item.hashFile);
-        if (cache !== item.hash) {
-            list.push(item);
-        }
-    }
-    return list;
-}
-
-
 function parseFiles(files, vars, projectPath) {
     if (!files) {
         return [];
     }
-    let downloads = [];
+    let list = [];
     for (let item of files) {
-        downloads.push(item);
         item.url = formatString(item.url, vars);
         item.dir = formatString(item.dir, vars);
         item.hash = getHash(item.url);
@@ -85,8 +69,31 @@ function parseFiles(files, vars, projectPath) {
         } else if (typeof unzip != "boolean") {
             item.unzip = false;
         }
+        let cache = Utils.readFile(item.hashFile);
+        if (cache !== item.hash) {
+            list.push(item);
+        }
     }
-    return filterByHash(downloads);
+    return list;
+}
+
+function parseRepos(repos, vars, projectPath) {
+    if (!repos) {
+        return [];
+    }
+    let list = [];
+    for (let item of repos) {
+        item.url = formatString(item.url, vars);
+        item.commit = formatString(item.commit, vars);
+        item.dir = formatString(item.dir, vars);
+        item.dir = path.resolve(projectPath, item.dir);
+        let shallowFile = Utils.joinPath(item.dir, ".git/shallow");
+        let commit = Utils.readFile(shallowFile).substr(0, 40);
+        if (commit !== item.commit) {
+            list.push(item);
+        }
+    }
+    return list;
 }
 
 function parseActions(actions, vars, projectPath) {
@@ -151,6 +158,8 @@ function parse(configFileName, platform) {
     config.version = data.version ? data.version : "0.0.0";
     let files = filterByPlatform(data.files, platform);
     config.files = parseFiles(files, data.vars, projectPath);
+    let repos = filterByPlatform(data.repos, platform);
+    config.repos = parseRepos(repos, data.vars, projectPath);
     let actions = filterByPlatform(data.actions, platform);
     config.actions = parseActions(actions, data.vars, projectPath);
     return config;

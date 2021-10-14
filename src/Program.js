@@ -25,40 +25,15 @@
 //////////////////////////////////////////////////////////////////////////////////////
 
 const fs = require("fs");
-const terminal = require('./Terminal')
-const Utils = require('./Utils')
-const Action = require('./Action')
-const CommandLine = require('./CommandLine')
-const Config = require('./Config')
-const File = require('./File')
+const terminal = require('./Terminal');
+const Utils = require('./Utils');
+const CommandLine = require('./CommandLine');
+const Config = require('./Config');
+const DepsTask = require('./tasks/DepsTask');
 const VERSION = "1.0.7";
 
 function printVersion() {
     terminal.log("Version " + VERSION + "\n");
-}
-
-function compareVersion(versionA, versionB) {
-    if (versionA === versionB) {
-        return 0;
-    }
-    let listA = versionA.split(".");
-    let listB = versionB.split(".");
-    let length = Math.max(listA.length, listB.length);
-    for (let i = 0; i < length; i++) {
-        if (listA.length <= i) {
-            return -1;
-        }
-        let a = parseInt(listA[i]);
-        if (listB.length <= i) {
-            return 1;
-        }
-        let b = parseInt(listB[i]);
-        if (a === b) {
-            continue;
-        }
-        return a > b ? 1 : -1;
-    }
-    return 0;
 }
 
 function printHelp() {
@@ -117,19 +92,9 @@ function run(args) {
             return;
         }
     }
-    let config = Config.parse(configFileName, commandOptions.platform);
-    if (!config) {
-        terminal.log("The DEPS config file is not a valid JSON file: " + configFileName);
-        process.exit(1);
-    }
-    if (compareVersion(VERSION, config.version) < 0) {
-        terminal.log("DEPS file requires version: " + config.version);
-        terminal.log("The current depsync version: " + VERSION);
-        terminal.log("Please update the depsync tool and then try again.");
-        process.exit(1);
-    }
-    File.downloadFiles(config.files, () => {
-        Action.executeActions(config.actions);
+    let task = new DepsTask(VERSION, configFileName, commandOptions.platform);
+    task.run(() => {
+        process.exit(0);
     });
 }
 

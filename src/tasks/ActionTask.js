@@ -24,31 +24,22 @@
 //
 //////////////////////////////////////////////////////////////////////////////////////
 
-const childProcess = require('child_process');
-const terminal = require('./Terminal')
+const terminal = require('../Terminal');
+const ShellTask = require('./ShellTask');
 
-function executeActions(list, callback) {
-    if (list.length === 0) {
-        callback && callback();
-        return;
-    }
-    let item = list.shift();
-    terminal.saveCursor();
-    terminal.log("【depsync】executing action: " + item.command + " " + item.args.join(" "));
-    let shell = childProcess.spawn(item.command, item.args, {cwd: item.dir, env: process.env});
-    shell.stdout.on('data', (data) => {
-        terminal.writeStdout(data);
-    });
-    shell.stderr.on('data', (data) => {
-        terminal.writeStderr(data);
-    })
-    shell.on('close', (code) => {
-        if (code !== 0) {
-            process.exit(1);
-        }
-        terminal.restoreCursorAndClear();
-        executeActions(list, callback);
-    })
+function ActionTask(item) {
+    this.item = item;
 }
 
-exports.executeActions = executeActions;
+ActionTask.prototype.run = function (callback) {
+    let item = this.item;
+    terminal.saveCursor();
+    terminal.log("【depsync】executing action: " + item.command + " " + item.args.join(" "));
+    let task = new ShellTask(item.command, item.args, item.dir);
+    task.run(() => {
+        terminal.restoreCursorAndClear();
+        callback && callback();
+    });
+};
+
+module.exports = ActionTask;

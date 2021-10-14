@@ -37,7 +37,6 @@ Terminal.prototype.saveCursor = function () {
 };
 
 Terminal.prototype.restoreCursorAndClear = function () {
-
     if (this.stdout.isTTY && this.savedString) {
         let lines = this.savedString.split("\n");
         if (lines[lines.length - 1] === "") {
@@ -79,6 +78,9 @@ Terminal.prototype.writeStdout = function (text) {
 };
 
 Terminal.prototype.writeStderr = function (text) {
+    if (this.needSave) {
+        this.savedString += text;
+    }
     this.stderr.write(text);
 };
 
@@ -89,7 +91,7 @@ Terminal.prototype.log = function (message) {
 
 Terminal.prototype.assert = function (assertion, message) {
     if (!assertion) {
-        this.stderr.write(message + "\n");
+        this.writeStderr(message + "\n");
     }
 };
 

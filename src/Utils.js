@@ -26,6 +26,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const childProcess = require("child_process");
 const SEPARATOR = "/";
 
 function getRootLength(path) {
@@ -166,9 +167,14 @@ function writeHash(item) {
     writeFile(item.hashFile, item.hash);
 }
 
+function exec(cmd, dir) {
+    return childProcess.execSync(cmd, {cwd: dir, env: process.env}).toString();
+}
+
 exports.joinPath = joinPath;
 exports.createDirectory = createDirectory;
 exports.deletePath = deletePath;
 exports.readFile = readFile;
 exports.writeFile = writeFile;
 exports.writeHash = writeHash;
+exports.exec = exec;

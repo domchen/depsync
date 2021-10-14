@@ -30,8 +30,9 @@ const https = require('follow-redirects').https;
 const path = require("path");
 const AdmZip = require('adm-zip');
 const ProgressBar = require("progress");
-const Utils = require('./Utils')
-const terminal = require('./Terminal')
+const terminal = require('../Terminal');
+const Utils = require('../Utils')
+
 
 function getEntryName(entry) {
     let entryName = entry.entryName.toString();
@@ -163,13 +164,12 @@ function loadSingleFileWithTimeOut(url, filePath, callback, options) {
     });
 }
 
+function FileTask(item) {
+    this.item = item;
+}
 
-function downloadFiles(list, callback) {
-    if (list.length === 0) {
-        callback && callback();
-        return;
-    }
-    let item = list.shift();
+FileTask.prototype.run = function (callback) {
+    let item = this.item;
     let fileName = item.url.split("?")[0];
     let filePath = path.resolve(item.dir, path.basename(fileName));
     Utils.deletePath(filePath);
@@ -201,8 +201,8 @@ function downloadFiles(list, callback) {
             }
         }
         Utils.writeHash(item);
-        downloadFiles(list, callback);
+        callback && callback();
     }
-}
+};
 
-exports.downloadFiles = downloadFiles;
+module.exports = FileTask;
