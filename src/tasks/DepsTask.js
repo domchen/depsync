@@ -64,6 +64,10 @@ function DepsTask(version, configFile, platform) {
 }
 
 DepsTask.prototype.run = function (callback) {
+    if (!fs.existsSync(this.configFile)) {
+        callback && callback();
+        return;
+    }
     let config = Config.parse(this.configFile, this.platform);
     if (!config) {
         terminal.log("The DEPS config file is not a valid JSON file: " + this.configFile);
@@ -71,7 +75,7 @@ DepsTask.prototype.run = function (callback) {
     }
     if (compareVersion(this.version, config.version) < 0) {
         terminal.log("DEPS file requires version: " + config.version);
-        terminal.log("The current depsync version: " + VERSION);
+        terminal.log("The current depsync version: " + this.version);
         terminal.log("Please update the depsync tool and then try again.");
         process.exit(1);
     }
@@ -79,9 +83,7 @@ DepsTask.prototype.run = function (callback) {
     for (let item of config.repos) {
         tasks.push(new RepoTask(item));
         let depsFile = Utils.joinPath(item.dir, "DEPS");
-        if (fs.existsSync(depsFile)) {
-            tasks.push(new DepsTask(this.version, depsFile, this.platform));
-        }
+        tasks.push(new DepsTask(this.version, depsFile, this.platform));
     }
     for (let item of config.files) {
         tasks.push(new FileTask(item));

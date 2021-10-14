@@ -4,5 +4,4 @@
 /test
 .idea/
 /third_party
-DEPS.cache
 package-lock.json
