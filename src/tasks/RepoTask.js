@@ -36,7 +36,6 @@ function RepoTask(item) {
 
 RepoTask.prototype.run = function (callback) {
     let item = this.item;
-    terminal.saveCursor();
     let name = path.basename(item.dir);
     terminal.log("【depsync】checking out repository: " + name + "@" + item.commit);
     Utils.deletePath(item.dir);
@@ -47,7 +46,6 @@ RepoTask.prototype.run = function (callback) {
     tasks.push(new ShellTask("git", ["fetch", "--depth", "1", "origin", item.commit], item.dir));
     tasks.push(new ShellTask("git", ["reset", "--hard", "FETCH_HEAD", "-q"], item.dir));
     TaskRunner.runTasks(tasks, () => {
-        terminal.restoreCursorAndClear();
         callback && callback();
     });
 };

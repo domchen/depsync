@@ -33,11 +33,9 @@ function ActionTask(item) {
 
 ActionTask.prototype.run = function (callback) {
     let item = this.item;
-    terminal.saveCursor();
     terminal.log("【depsync】executing action: " + item.command + " " + item.args.join(" "));
     let task = new ShellTask(item.command, item.args, item.dir);
     task.run(() => {
-        terminal.restoreCursorAndClear();
         callback && callback();
     });
 };

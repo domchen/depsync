@@ -43,7 +43,7 @@ function getEntryName(entry) {
 }
 
 function unzipFile(filePath, dir) {
-    terminal.log("【depsync】unzipping file: " + filePath);
+    terminal.log("Unzipping: " + filePath);
     let zip = new AdmZip(filePath);
     let entries = zip.getEntries();
     let rootNames = [];
@@ -97,16 +97,13 @@ function loadMultiParts(urls, filePath, callback) {
 
 function loadSingleFile(url, filePath, callback, options) {
     let retryTimes = 0;
-    terminal.saveCursor();
-    terminal.log("【depsync】downloading file: " + url);
+    terminal.log("Downloading: " + url);
     loadSingleFileWithTimeOut(url, filePath, onFinish, options);
 
     function onFinish(error) {
-        terminal.restoreCursorAndClear();
         if (error && error.message === "timeout" && retryTimes < 3) {
             retryTimes++;
-            terminal.saveCursor();
-            terminal.log("downloading file retry " + retryTimes + ": " + url);
+            terminal.log("Downloading retry " + retryTimes + ": " + url);
             loadSingleFileWithTimeOut(url, filePath, onFinish, options);
         } else {
             callback(error);
@@ -171,7 +168,9 @@ function FileTask(item) {
 FileTask.prototype.run = function (callback) {
     let item = this.item;
     let fileName = item.url.split("?")[0];
-    let filePath = path.resolve(item.dir, path.basename(fileName));
+    fileName = path.basename(fileName);
+    terminal.log("【depsync】downloading file: " + fileName);
+    let filePath = path.resolve(item.dir, fileName);
     Utils.deletePath(filePath);
     if (item.multipart) {
         let urls = [];
@@ -185,16 +184,13 @@ FileTask.prototype.run = function (callback) {
 
     function onFinish(error) {
         if (error) {
-            terminal.log("【depsync】downloading: " + item.url);
             terminal.log("Cannot download file : " + error.message);
             process.exit(1);
             return;
         }
         if (item.unzip) {
             try {
-                terminal.saveCursor();
                 unzipFile(filePath, item.dir);
-                terminal.restoreCursorAndClear();
             } catch (e) {
                 terminal.log("Cannot unzip file: " + filePath);
                 process.exit(1);
