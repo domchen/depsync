@@ -25,7 +25,7 @@
 //////////////////////////////////////////////////////////////////////////////////////
 
 const terminal = require('../Terminal');
-const ShellTask = require('./ShellTask');
+const Utils = require("../Utils");
 
 function ActionTask(item) {
     this.item = item;
@@ -33,11 +33,9 @@ function ActionTask(item) {
 
 ActionTask.prototype.run = function (callback) {
     let item = this.item;
-    terminal.log("【depsync】executing action: " + item.command + " " + item.args.join(" "));
-    let task = new ShellTask(item.command, item.args, item.dir);
-    task.run(() => {
-        callback && callback();
-    });
+    terminal.log("【depsync】executing action: " + item.command);
+    Utils.exec(item.command, item.dir);
+    callback && callback();
 };
 
 module.exports = ActionTask;

@@ -168,7 +168,11 @@ function writeHash(item) {
 }
 
 function exec(cmd, dir) {
-    return childProcess.execSync(cmd, {cwd: dir, env: process.env}).toString();
+    let args = cmd.split(" ");
+    let result = childProcess.spawnSync(args[0], args.slice(1), {cwd: dir, env: process.env, stdio: "inherit"});
+    if (result.status !== 0) {
+        process.exit(1);
+    }
 }
 
 exports.joinPath = joinPath;

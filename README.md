@@ -99,19 +99,11 @@ Here is an example of DEPS file:
   "actions": {
     "common": [
       {
-        "command": "npm",
-        "args": [
-          "install",
-          "tspack"
-        ],
+        "command": "npm install tspack",
         "dir": "./"
       },
       {
-        "command": "node",
-        "args": [
-          "node_modules/tspack/bin/tspack",
-          "--v"
-        ],
+        "command": "node node_modules/tspack/bin/tspack --v",
         "dir": "./"
       }
     ]

@@ -27,8 +27,6 @@
 const path = require('path');
 const terminal = require("../Terminal");
 const Utils = require("../Utils");
-const TaskRunner = require('./TaskRunner')
-const ShellTask = require('./ShellTask');
 
 function AddLoginInfo(url) {
     if (url.indexOf("@") !== -1) {
@@ -58,14 +56,11 @@ RepoTask.prototype.run = function (callback) {
     Utils.deletePath(item.dir);
     Utils.createDirectory(item.dir);
     let url = AddLoginInfo(item.url);
-    let tasks = [];
-    tasks.push(new ShellTask("git", ["init", "-q"], item.dir));
-    tasks.push(new ShellTask("git", ["remote", "add", "origin", url], item.dir));
-    tasks.push(new ShellTask("git", ["fetch", "--depth", "1", "origin", item.commit], item.dir));
-    tasks.push(new ShellTask("git", ["reset", "--hard", "FETCH_HEAD", "-q"], item.dir));
-    TaskRunner.runTasks(tasks, () => {
-        callback && callback();
-    });
+    Utils.exec("git init -q", item.dir);
+    Utils.exec("git remote add origin " + url, item.dir);
+    Utils.exec("git fetch --depth 1 origin " + item.commit, item.dir);
+    Utils.exec("git reset --hard FETCH_HEAD -q", item.dir);
+    callback && callback();
 };
 
 module.exports = RepoTask;
