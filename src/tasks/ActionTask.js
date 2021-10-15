@@ -24,7 +24,6 @@
 //
 //////////////////////////////////////////////////////////////////////////////////////
 
-const terminal = require('../Terminal');
 const Utils = require("../Utils");
 
 function ActionTask(item) {
@@ -33,8 +32,9 @@ function ActionTask(item) {
 
 ActionTask.prototype.run = function (callback) {
     let item = this.item;
-    terminal.log("【depsync】executing action: " + item.command);
+    Utils.log("【depsync】executing action: " + item.command);
     Utils.exec(item.command, item.dir);
+    Utils.log("");
     callback && callback();
 };
 

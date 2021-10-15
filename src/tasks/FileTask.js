@@ -30,7 +30,6 @@ const https = require('follow-redirects').https;
 const path = require("path");
 const AdmZip = require('adm-zip');
 const ProgressBar = require("progress");
-const terminal = require('../Terminal');
 const Utils = require('../Utils')
 
 
@@ -43,7 +42,7 @@ function getEntryName(entry) {
 }
 
 function unzipFile(filePath, dir) {
-    terminal.log("Unzipping: " + filePath);
+    Utils.log("Unzipping: " + filePath);
     let zip = new AdmZip(filePath);
     let entries = zip.getEntries();
     let rootNames = [];
@@ -97,13 +96,13 @@ function loadMultiParts(urls, filePath, callback) {
 
 function loadSingleFile(url, filePath, callback, options) {
     let retryTimes = 0;
-    terminal.log("Downloading: " + url);
+    Utils.log("Downloading: " + url);
     loadSingleFileWithTimeOut(url, filePath, onFinish, options);
 
     function onFinish(error) {
         if (error && error.message === "timeout" && retryTimes < 3) {
             retryTimes++;
-            terminal.log("Downloading retry " + retryTimes + ": " + url);
+            Utils.log("Downloading retry " + retryTimes + ": " + url);
             loadSingleFileWithTimeOut(url, filePath, onFinish, options);
         } else {
             callback(error);
@@ -116,7 +115,7 @@ function loadSingleFileWithTimeOut(url, filePath, callback, options) {
     try {
         Utils.createDirectory(path.dirname(filePath));
     } catch (e) {
-        terminal.log("Cannot create directory: " + path.dirname(filePath));
+        Utils.error("Cannot create directory: " + path.dirname(filePath));
         process.exit(1);
     }
     let file = fs.createWriteStream(filePath, options);
@@ -169,7 +168,7 @@ FileTask.prototype.run = function (callback) {
     let item = this.item;
     let fileName = item.url.split("?")[0];
     fileName = path.basename(fileName);
-    terminal.log("【depsync】downloading file: " + fileName);
+    Utils.log("【depsync】downloading file: " + fileName);
     let filePath = path.resolve(item.dir, fileName);
     Utils.deletePath(filePath);
     if (item.multipart) {
@@ -184,7 +183,7 @@ FileTask.prototype.run = function (callback) {
 
     function onFinish(error) {
         if (error) {
-            terminal.log("Cannot download file : " + error.message);
+            Utils.error("Cannot download file : " + error.message);
             process.exit(1);
             return;
         }
@@ -192,11 +191,12 @@ FileTask.prototype.run = function (callback) {
             try {
                 unzipFile(filePath, item.dir);
             } catch (e) {
-                terminal.log("Cannot unzip file: " + filePath);
+                Utils.error("Cannot unzip file: " + filePath);
                 process.exit(1);
             }
         }
         Utils.writeHash(item);
+        Utils.log("");
         callback && callback();
     }
 };

@@ -25,7 +25,6 @@
 //////////////////////////////////////////////////////////////////////////////////////
 
 const fs = require("fs");
-const terminal = require('./Terminal');
 const Utils = require('./Utils');
 const CommandLine = require('./CommandLine');
 const Config = require('./Config');
@@ -33,7 +32,7 @@ const DepsTask = require('./tasks/DepsTask');
 const VERSION = "1.1.1";
 
 function printVersion() {
-    terminal.log("Version " + VERSION + "\n");
+    Utils.log("Version " + VERSION + "\n");
 }
 
 function printHelp() {
@@ -53,7 +52,7 @@ function printHelp() {
         name += makePadding(25 - name.length);
         output += name + option.description + newLine;
     });
-    terminal.log(output);
+    Utils.log(output);
 }
 
 function makePadding(paddingLength) {
@@ -64,7 +63,7 @@ function makePadding(paddingLength) {
 function run(args) {
     let commandOptions = CommandLine.parse(args);
     if (commandOptions.errors.length > 0) {
-        terminal.log(commandOptions.errors.join("\n") + "\n");
+        Utils.error(commandOptions.errors.join("\n") + "\n");
         process.exit(1);
     }
     if (commandOptions.version) {
@@ -80,7 +79,7 @@ function run(args) {
     if (commandOptions.project) {
         configFileName = Utils.joinPath(commandOptions.project, "DEPS");
         if (!fs.existsSync(configFileName)) {
-            terminal.log("Cannot find a DEPS file at the specified directory: " + commandOptions.project + "\n");
+            Utils.error("Cannot find a DEPS file at the specified directory: " + commandOptions.project + "\n");
             process.exit(1);
         }
     } else {

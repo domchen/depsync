@@ -25,6 +25,7 @@
   "dependencies": {
     "adm-zip": "latest",
     "follow-redirects": "latest",
-    "progress": "latest"
+    "progress": "latest",
+    "tspack": "^1.0.5"
   }
 }

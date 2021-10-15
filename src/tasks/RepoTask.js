@@ -25,7 +25,6 @@
 //////////////////////////////////////////////////////////////////////////////////////
 
 const path = require('path');
-const terminal = require("../Terminal");
 const Utils = require("../Utils");
 
 function AddLoginInfo(url) {
@@ -52,7 +51,7 @@ function RepoTask(item) {
 RepoTask.prototype.run = function (callback) {
     let item = this.item;
     let name = path.basename(item.dir);
-    terminal.log("【depsync】checking out repository: " + name + "@" + item.commit);
+    Utils.log("【depsync】checking out repository: " + name + "@" + item.commit);
     Utils.deletePath(item.dir);
     Utils.createDirectory(item.dir);
     let url = AddLoginInfo(item.url);
@@ -60,6 +59,7 @@ RepoTask.prototype.run = function (callback) {
     Utils.exec("git remote add origin " + url, item.dir);
     Utils.exec("git fetch --depth 1 origin " + item.commit, item.dir);
     Utils.exec("git reset --hard FETCH_HEAD -q", item.dir);
+    Utils.log("");
     callback && callback();
 };
 

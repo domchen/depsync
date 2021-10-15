@@ -27,7 +27,6 @@
 const fs = require('fs');
 const Utils = require('../Utils');
 const Config = require("../Config");
-const terminal = require("../Terminal");
 const RepoTask = require("./RepoTask");
 const FileTask = require("./FileTask");
 const ActionTask = require("./ActionTask");
@@ -70,13 +69,13 @@ DepsTask.prototype.run = function (callback) {
     }
     let config = Config.parse(this.configFile, this.platform);
     if (!config) {
-        terminal.log("The DEPS config file is not a valid JSON file: " + this.configFile);
+        Utils.error("The DEPS config file is not a valid JSON file: " + this.configFile);
         process.exit(1);
     }
     if (compareVersion(this.version, config.version) < 0) {
-        terminal.log("DEPS file requires version: " + config.version);
-        terminal.log("The current depsync version: " + this.version);
-        terminal.log("Please update the depsync tool and then try again.");
+        Utils.error("DEPS file requires version: " + config.version);
+        Utils.error("The current depsync version: " + this.version);
+        Utils.error("Please update the depsync tool and then try again.");
         process.exit(1);
     }
     let tasks = [];

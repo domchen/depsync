@@ -175,6 +175,24 @@ function exec(cmd, dir) {
     }
 }
 
+function formatString(format) {
+    let objects = new Array(arguments.length);
+    for (let index = 0; index < arguments.length; index++) {
+        objects[index] = arguments[index];
+    }
+    return objects.join(' ');
+}
+
+function log(message) {
+    let text = formatString.apply(this, arguments) + "\n";
+    process.stdout.write(text);
+}
+
+function error(message) {
+    let text = formatString.apply(this, arguments) + "\n";
+    process.stderr.write(text);
+}
+
 exports.joinPath = joinPath;
 exports.createDirectory = createDirectory;
 exports.deletePath = deletePath;
@@ -182,3 +200,5 @@ exports.readFile = readFile;
 exports.writeFile = writeFile;
 exports.writeHash = writeHash;
 exports.exec = exec;
+exports.log = log;
+exports.error = error;
