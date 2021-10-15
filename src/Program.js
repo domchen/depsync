@@ -29,7 +29,7 @@ const Utils = require('./Utils');
 const CommandLine = require('./CommandLine');
 const Config = require('./Config');
 const DepsTask = require('./tasks/DepsTask');
-const VERSION = "1.1.1";
+const VERSION = "1.1.2";
 
 function printVersion() {
     Utils.log("Version " + VERSION + "\n");
