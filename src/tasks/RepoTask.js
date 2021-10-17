@@ -43,13 +43,15 @@ function RepoTask(item) {
     this.item = item;
     this.username = process.env["GIT_USER"];
     this.password = process.env["GIT_PASSWORD"];
-    if (!this.username || !this.password) {
-        let domainName = process.env["DomainName"];
+    let domainName = process.env["DomainName"];
+    if ((!this.username || !this.password) && domainName) {
         let list = domainName.split("@");
         if (list.length === 2) {
             list = list[0].split(":");
-            this.username = list[0];
-            this.password = list[1];
+            if (list.length === 2) {
+                this.username = list[0];
+                this.password = list[1];
+            }
         }
     }
 }
