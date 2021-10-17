@@ -32,7 +32,7 @@ const DepsTask = require('./tasks/DepsTask');
 const {version} = require('../package.json');
 
 function printVersion() {
-    Utils.log("Version " + version + "\n");
+    Utils.log("Version", version);
 }
 
 function printHelp() {
