@@ -167,14 +167,6 @@ function writeHash(item) {
     writeFile(item.hashFile, item.hash);
 }
 
-function exec(cmd, dir) {
-    let args = cmd.split(" ");
-    let result = childProcess.spawnSync(args[0], args.slice(1), {cwd: dir, env: process.env, stdio: "inherit"});
-    if (result.status !== 0) {
-        process.exit(1);
-    }
-}
-
 function formatString(format) {
     let objects = new Array(arguments.length);
     for (let index = 0; index < arguments.length; index++) {
@@ -191,6 +183,19 @@ function log(message) {
 function error(message) {
     let text = formatString.apply(this, arguments) + "\n";
     process.stderr.write(text);
+}
+
+function exec(cmd, dir) {
+    let options = {
+        cwd: dir,
+        env: process.env,
+        stdio: "inherit"
+    }
+    try {
+        childProcess.execSync(cmd, options);
+    } catch (error) {
+        process.exit(1);
+    }
 }
 
 exports.joinPath = joinPath;
