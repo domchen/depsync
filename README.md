@@ -33,7 +33,7 @@ Here is an example of DEPS file:
 
 ```json
 {
-  "version": "1.1.1",
+  "version": "1.1.5",
   "vars": {
     "GIT_DOMAIN": "github.com",
     "SKIA_ROOT": "https://github.com/domchen/depsync/releases/download/1.0.1",
@@ -99,11 +99,11 @@ Here is an example of DEPS file:
   "actions": {
     "common": [
       {
-        "command": "npm install tspack",
+        "command": "npm install -g depsync",
         "dir": "./"
       },
       {
-        "command": "node node_modules/tspack/bin/tspack --v",
+        "command": "depsync --v",
         "dir": "./"
       }
     ]
