@@ -27,17 +27,12 @@
 const path = require('path');
 const Utils = require("../Utils");
 
-function AddLoginInfo(url) {
+function AddLoginInfo(url, user, password) {
     if (url.indexOf("@") !== -1) {
         return url;
     }
     let index = url.indexOf("://");
     if (index === -1) {
-        return url;
-    }
-    let user = process.env["GIT_USER"];
-    let password = process.env["GIT_PASSWORD"];
-    if (!user || !password) {
         return url;
     }
     url = url.substring(0, index + 3) + user + ":" + password + "@" + url.substring(index + 3);
@@ -46,6 +41,17 @@ function AddLoginInfo(url) {
 
 function RepoTask(item) {
     this.item = item;
+    this.username = process.env["GIT_USER"];
+    this.password = process.env["GIT_PASSWORD"];
+    if (!this.username || !this.password) {
+        let domainName = process.env["DomainName"];
+        let list = domainName.split("@");
+        if (list.length === 2) {
+            list = list[0].split(":");
+            this.username = list[0];
+            this.password = list[1];
+        }
+    }
 }
 
 RepoTask.prototype.run = function (callback) {
@@ -54,7 +60,10 @@ RepoTask.prototype.run = function (callback) {
     Utils.log("【depsync】checking out repository: " + name + "@" + item.commit);
     Utils.deletePath(item.dir);
     Utils.createDirectory(item.dir);
-    let url = AddLoginInfo(item.url);
+    let url = item.url;
+    if (this.username && this.password) {
+        url = AddLoginInfo(url, this.username, this.password);
+    }
     Utils.exec("git init -q", item.dir);
     Utils.exec("git remote add origin " + url, item.dir);
     Utils.exec("git fetch --depth 1 origin " + item.commit, item.dir);
