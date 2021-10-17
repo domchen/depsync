@@ -65,11 +65,11 @@
   "actions": {
     "common": [
       {
-        "command": "npm install tspack",
+        "command": "npm install -g depsync",
         "dir": "./"
       },
       {
-        "command": "node node_modules/tspack/bin/tspack --v",
+        "command": "depsync --v",
         "dir": "./"
       }
     ]
