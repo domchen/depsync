@@ -29,10 +29,10 @@ const Utils = require('./Utils');
 const CommandLine = require('./CommandLine');
 const Config = require('./Config');
 const DepsTask = require('./tasks/DepsTask');
-const VERSION = "1.1.2";
+const {version} = require('../package.json');
 
 function printVersion() {
-    Utils.log("Version " + VERSION + "\n");
+    Utils.log("Version " + version + "\n");
 }
 
 function printHelp() {
@@ -91,7 +91,7 @@ function run(args) {
             return;
         }
     }
-    let task = new DepsTask(VERSION, configFileName, commandOptions.platform);
+    let task = new DepsTask(version, configFileName, commandOptions.platform);
     task.run(() => {
         process.exit(0);
     });
