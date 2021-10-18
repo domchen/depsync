@@ -191,11 +191,15 @@ function error(message) {
     process.stderr.write(text);
 }
 
-function exec(cmd, dir) {
+function exec(cmd, dir, quiet) {
     let options = {
         cwd: dir,
-        env: process.env,
-        stdio: "inherit"
+        env: process.env
+    }
+    if (quiet) {
+        options.stderr = "inherit";
+    } else {
+        options.stdio = "inherit";
     }
     try {
         childProcess.execSync(cmd, options);
