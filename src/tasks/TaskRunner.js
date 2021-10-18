@@ -24,6 +24,8 @@
 //
 //////////////////////////////////////////////////////////////////////////////////////
 
+const Utils = require("../Utils");
+
 function runTasks(tasks, callback) {
     if (tasks.length === 0) {
         callback && callback();
@@ -31,6 +33,7 @@ function runTasks(tasks, callback) {
     }
     let task = tasks.shift();
     task.run(() => {
+        Utils.addLineBreaker();
         runTasks(tasks, callback);
     });
 }

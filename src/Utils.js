@@ -28,6 +28,7 @@ const fs = require("fs");
 const path = require("path");
 const childProcess = require("child_process");
 const SEPARATOR = "/";
+let hasLineBreaker = false;
 
 function getRootLength(path) {
     if (path.charAt(0) === "/") {
@@ -172,7 +173,12 @@ function formatString(format) {
     for (let index = 0; index < arguments.length; index++) {
         objects[index] = arguments[index];
     }
-    return objects.join(' ');
+    let text = objects.join(' ');
+    if (hasLineBreaker) {
+        hasLineBreaker = false;
+        text = "\n" + text;
+    }
+    return text;
 }
 
 function log(message) {
@@ -198,6 +204,10 @@ function exec(cmd, dir) {
     }
 }
 
+function addLineBreaker() {
+    hasLineBreaker = true;
+}
+
 exports.joinPath = joinPath;
 exports.createDirectory = createDirectory;
 exports.deletePath = deletePath;
@@ -207,3 +217,4 @@ exports.writeHash = writeHash;
 exports.exec = exec;
 exports.log = log;
 exports.error = error;
+exports.addLineBreaker = addLineBreaker;

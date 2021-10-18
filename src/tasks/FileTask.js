@@ -196,7 +196,6 @@ FileTask.prototype.run = function (callback) {
             }
         }
         Utils.writeHash(item);
-        Utils.log("");
         callback && callback();
     }
 };
