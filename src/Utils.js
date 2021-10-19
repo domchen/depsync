@@ -144,17 +144,19 @@ function error(message) {
 
 function exec(cmd, dir, quiet) {
     let options = {
+        shell: true,
         cwd: dir,
         env: process.env
     }
-    if (quiet) {
-        options.stderr = "inherit";
-    } else {
+    if (!quiet) {
         options.stdio = "inherit";
     }
-    try {
-        childProcess.execSync(cmd, options);
-    } catch (error) {
+
+    let result = childProcess.spawnSync(cmd, options);
+    if (result.status !== 0) {
+        if (quiet) {
+            error(result.stderr);
+        }
         process.exit(1);
     }
 }
