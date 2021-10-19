@@ -27,49 +27,7 @@
 const fs = require("fs");
 const path = require("path");
 const childProcess = require("child_process");
-const SEPARATOR = "/";
 let hasLineBreaker = false;
-
-function getRootLength(path) {
-    if (path.charAt(0) === "/") {
-        if (path.charAt(1) !== "/")
-            return 1;
-        let p1 = path.indexOf("/", 2);
-        if (p1 < 0)
-            return 2;
-        let p2 = path.indexOf("/", p1 + 1);
-        if (p2 < 0)
-            return p1 + 1;
-        return p2 + 1;
-    }
-    if (path.charAt(1) === ":") {
-        if (path.charAt(2) === "/")
-            return 3;
-        return 2;
-    }
-    if (path.lastIndexOf("file:///", 0) === 0) {
-        return "file:///".length;
-    }
-    let idx = path.indexOf("://");
-    if (idx !== -1) {
-        return idx + "://".length;
-    }
-    return 0;
-}
-
-function joinPath(path1, path2) {
-    if (!(path1 && path1.length))
-        return path2;
-    if (!(path2 && path2.length))
-        return path1;
-    path1 = path1.split("\\").join(SEPARATOR);
-    path2 = path2.split("\\").join(SEPARATOR);
-    if (getRootLength(path2) !== 0)
-        return path2;
-    if (path1.charAt(path1.length - 1) === SEPARATOR)
-        return path1 + path2;
-    return path1 + SEPARATOR + path2;
-}
 
 function createDirectory(filePath, mode) {
     if (mode === undefined) {
@@ -161,13 +119,6 @@ function writeFile(filePath, content) {
     return true;
 }
 
-function writeHash(item) {
-    if (!item || !item.hashFile || !item.hash) {
-        return;
-    }
-    writeFile(item.hashFile, item.hash);
-}
-
 function formatString(format) {
     let objects = new Array(arguments.length);
     for (let index = 0; index < arguments.length; index++) {
@@ -212,12 +163,10 @@ function addLineBreaker() {
     hasLineBreaker = true;
 }
 
-exports.joinPath = joinPath;
 exports.createDirectory = createDirectory;
 exports.deletePath = deletePath;
 exports.readFile = readFile;
 exports.writeFile = writeFile;
-exports.writeHash = writeHash;
 exports.exec = exec;
 exports.log = log;
 exports.error = error;

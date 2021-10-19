@@ -31,6 +31,7 @@ const RepoTask = require("./RepoTask");
 const FileTask = require("./FileTask");
 const ActionTask = require("./ActionTask");
 const TaskRunner = require("./TaskRunner");
+const path = require("path");
 
 function compareVersion(versionA, versionB) {
     if (versionA === versionB) {
@@ -81,7 +82,7 @@ DepsTask.prototype.run = function (callback) {
     let tasks = [];
     for (let item of config.repos) {
         tasks.push(new RepoTask(item));
-        let depsFile = Utils.joinPath(item.dir, "DEPS");
+        let depsFile = path.join(item.dir, "DEPS");
         tasks.push(new DepsTask(this.version, depsFile, this.platform));
     }
     for (let item of config.files) {

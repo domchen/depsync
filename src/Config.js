@@ -31,7 +31,7 @@ const crypto = require('crypto')
 
 function findConfigFile(searchPath) {
     while (true) {
-        let fileName = Utils.joinPath(searchPath, "DEPS");
+        let fileName = path.join(searchPath, "DEPS");
         if (fs.existsSync(fileName)) {
             return fileName;
         }
@@ -87,7 +87,7 @@ function parseRepos(repos, vars, projectPath) {
         item.commit = formatString(item.commit, vars);
         item.dir = formatString(item.dir, vars);
         item.dir = path.resolve(projectPath, item.dir);
-        let shallowFile = Utils.joinPath(item.dir, ".git/shallow");
+        let shallowFile = path.join(item.dir, ".git", "shallow");
         let commit = Utils.readFile(shallowFile).substr(0, 40);
         if (commit !== item.commit) {
             list.push(item);

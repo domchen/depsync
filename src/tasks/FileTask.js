@@ -164,6 +164,13 @@ function FileTask(item) {
     this.item = item;
 }
 
+function writeHash(item) {
+    if (!item || !item.hashFile || !item.hash) {
+        return;
+    }
+    writeFile(item.hashFile, item.hash);
+}
+
 FileTask.prototype.run = function (callback) {
     let item = this.item;
     let fileName = item.url.split("?")[0];
@@ -195,7 +202,7 @@ FileTask.prototype.run = function (callback) {
                 process.exit(1);
             }
         }
-        Utils.writeHash(item);
+        writeHash(item);
         callback && callback();
     }
 };

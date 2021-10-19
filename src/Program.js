@@ -30,6 +30,7 @@ const CommandLine = require('./CommandLine');
 const Config = require('./Config');
 const DepsTask = require('./tasks/DepsTask');
 const {version} = require('../package.json');
+const path = require("path");
 
 function printVersion() {
     Utils.log("Version", version);
@@ -77,7 +78,7 @@ function run(args) {
     }
     let configFileName = "";
     if (commandOptions.project) {
-        configFileName = Utils.joinPath(commandOptions.project, "DEPS");
+        configFileName = path.join(commandOptions.project, "DEPS");
         if (!fs.existsSync(configFileName)) {
             Utils.error("Cannot find a DEPS file at the specified directory: " + commandOptions.project + "\n");
             process.exit(1);
