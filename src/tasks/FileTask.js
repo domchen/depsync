@@ -168,7 +168,7 @@ function writeHash(item) {
     if (!item || !item.hashFile || !item.hash) {
         return;
     }
-    writeFile(item.hashFile, item.hash);
+    Utils.writeFile(item.hashFile, item.hash);
 }
 
 FileTask.prototype.run = function (callback) {
