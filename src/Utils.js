@@ -133,12 +133,18 @@ function formatString(format) {
 }
 
 function log(message) {
-    let text = formatString.apply(this, arguments) + "\n";
+    let text = formatString.apply(this, arguments);
+    if (text) {
+        text += "\n";
+    }
     process.stdout.write(text);
 }
 
 function error(message) {
-    let text = formatString.apply(this, arguments) + "\n";
+    let text = formatString.apply(this, arguments);
+    if (text) {
+        text += "\n";
+    }
     process.stderr.write(text);
 }
 
@@ -155,6 +161,7 @@ function exec(cmd, dir, quiet) {
     let result = childProcess.spawnSync(cmd, options);
     if (result.status !== 0) {
         if (quiet) {
+            log(result.stdout);
             error(result.stderr);
         }
         process.exit(1);
