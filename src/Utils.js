@@ -27,6 +27,7 @@
 const fs = require("fs");
 const path = require("path");
 const childProcess = require("child_process");
+const os = require("os");
 let hasLineBreaker = false;
 
 function createDirectory(filePath, mode) {
@@ -170,6 +171,10 @@ function exec(cmd, dir, quiet) {
 
 function addLineBreaker() {
     hasLineBreaker = true;
+}
+
+if (os.platform() === "win32") {
+    exec("chcp 65001", process.cwd(), true);
 }
 
 exports.createDirectory = createDirectory;
