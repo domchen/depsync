@@ -37,7 +37,7 @@ const optionDeclarations = [
         name: "project",
         shortName: "p",
         type: "string",
-        description: "Synchronize the project in the given directory.."
+        description: "Synchronize the project in the given directory."
     },
     {
         name: "version",

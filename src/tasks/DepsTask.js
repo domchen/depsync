@@ -70,14 +70,15 @@ DepsTask.prototype.run = function (callback) {
     }
     let config = Config.parse(this.configFile, this.platform);
     if (!config) {
-        Utils.error("The DEPS config file is not a valid JSON file: " + this.configFile);
-        process.exit(1);
+        callback && callback();
+        return;
     }
     if (compareVersion(this.version, config.version) < 0) {
         Utils.error("DEPS file requires version: " + config.version);
         Utils.error("The current depsync version: " + this.version);
         Utils.error("Please update the depsync tool and then try again.");
-        process.exit(1);
+        callback && callback();
+        return;
     }
     let tasks = [];
     for (let item of config.repos) {

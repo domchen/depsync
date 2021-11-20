@@ -146,11 +146,14 @@ function filterByPlatform(items, hostPlatform) {
 }
 
 function parse(configFileName, platform) {
+    let jsonText = Utils.readFile(configFileName);
     let data;
     try {
-        let jsonText = Utils.readFile(configFileName);
         data = JSON.parse(jsonText);
     } catch (e) {
+        if (jsonText.trimLeft().indexOf("{") === 0) {
+            Utils.error("The DEPS config file is not a valid JSON file: " + this.configFile);
+        }
         return null;
     }
     let projectPath = path.dirname(configFileName);
