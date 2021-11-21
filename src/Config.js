@@ -69,10 +69,7 @@ function parseFiles(files, vars, projectPath) {
         } else if (typeof unzip != "boolean") {
             item.unzip = false;
         }
-        let cache = Utils.readFile(item.hashFile);
-        if (cache !== item.hash) {
-            list.push(item);
-        }
+        list.push(item);
     }
     return list;
 }
@@ -87,11 +84,7 @@ function parseRepos(repos, vars, projectPath) {
         item.commit = formatString(item.commit, vars);
         item.dir = formatString(item.dir, vars);
         item.dir = path.resolve(projectPath, item.dir);
-        let shallowFile = path.join(item.dir, ".git", "shallow");
-        let commit = Utils.readFile(shallowFile).substr(0, 40);
-        if (commit !== item.commit) {
-            list.push(item);
-        }
+        list.push(item);
     }
     return list;
 }
@@ -136,7 +129,7 @@ function filterByPlatform(items, hostPlatform) {
     let list = [];
     let platforms = Object.keys(items);
     for (let platform of platforms) {
-        if (platform === hostPlatform || platform === "common") {
+        if (!hostPlatform || platform === hostPlatform || platform === "common") {
             for (let item of items[platform]) {
                 list.push(item);
             }
@@ -145,20 +138,54 @@ function filterByPlatform(items, hostPlatform) {
     return list;
 }
 
-function parse(configFileName, platform) {
+function compareVersion(versionA, versionB) {
+    if (versionA === versionB) {
+        return 0;
+    }
+    let listA = versionA.split(".");
+    let listB = versionB.split(".");
+    let length = Math.max(listA.length, listB.length);
+    for (let i = 0; i < length; i++) {
+        if (listA.length <= i) {
+            return -1;
+        }
+        let a = parseInt(listA[i]);
+        if (listB.length <= i) {
+            return 1;
+        }
+        let b = parseInt(listB[i]);
+        if (a === b) {
+            continue;
+        }
+        return a > b ? 1 : -1;
+    }
+    return 0;
+}
+
+function parse(configFileName, version, platform) {
+    if (!fs.existsSync(configFileName)) {
+        return null;
+    }
     let jsonText = Utils.readFile(configFileName);
     let data;
     try {
         data = JSON.parse(jsonText);
     } catch (e) {
         if (jsonText.trimLeft().indexOf("{") === 0) {
-            Utils.error("The DEPS config file is not a valid JSON file: " + this.configFile);
+            Utils.error("The DEPS config file is not a valid JSON file: " + configFileName);
         }
         return null;
     }
     let projectPath = path.dirname(configFileName);
     let config = {};
     config.version = data.version ? data.version : "0.0.0";
+    if (compareVersion(version, config.version) < 0) {
+        Utils.error("The DEPS config requires a high depsync tool version: " + configFileName);
+        Utils.error("Requires version: " + config.version);
+        Utils.error("Current version: " + version);
+        Utils.error("Please update the depsync tool and try again.");
+        return null;
+    }
     let files = filterByPlatform(data.files, platform);
     config.files = parseFiles(files, data.vars, projectPath);
     let repos = filterByPlatform(data.repos, platform);

@@ -28,6 +28,7 @@ const fs = require("fs");
 const Utils = require('./Utils');
 const CommandLine = require('./CommandLine');
 const Config = require('./Config');
+const CleanTask = require('./tasks/CleanTask');
 const DepsTask = require('./tasks/DepsTask');
 const {version} = require('../package.json');
 const path = require("path");
@@ -92,10 +93,17 @@ function run(args) {
             return;
         }
     }
-    let task = new DepsTask(version, configFileName, commandOptions.platform);
-    task.run(() => {
-        process.exit(0);
-    });
+    if (commandOptions.clean) {
+        let task = new CleanTask(configFileName, version);
+        task.run(() => {
+            process.exit(0);
+        });
+    } else {
+        let task = new DepsTask(configFileName, version, commandOptions.platform);
+        task.run(() => {
+            process.exit(0);
+        });
+    }
 }
 
 exports.run = run;

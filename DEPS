@@ -1,5 +1,5 @@
 {
-  "version": "1.1.6",
+  "version": "1.2.2",
   "vars": {
     "GIT_DOMAIN": "github.com",
     "SKIA_ROOT": "https://github.com/domchen/depsync/releases/download/1.0.1",
@@ -65,12 +65,8 @@
   "actions": {
     "common": [
       {
-        "command": "npm install -g depsync",
-        "dir": "./"
-      },
-      {
-        "command": "depsync --v",
-        "dir": "./"
+        "command": "depsync --clean",
+        "dir": "third_party"
       }
     ]
   }

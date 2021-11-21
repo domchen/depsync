@@ -74,6 +74,19 @@ function deleteDirectory(path) {
     }
 }
 
+function deleteEmptyDir(path) {
+    try {
+        if (!fs.lstatSync(path).isDirectory()) {
+            return;
+        }
+        let files = fs.readdirSync(path);
+        if (files.length === 0) {
+            fs.rmdirSync(path);
+        }
+    } catch (e) {
+    }
+}
+
 function deletePath(path) {
     try {
         if (fs.lstatSync(path).isDirectory()) {
@@ -151,10 +164,11 @@ function error(message) {
 
 function exec(cmd, dir, quiet) {
     let options = {
-        shell: true,
+        shell: os.platform() === "win32" ? "cmd.exe" : true,
         cwd: dir,
         env: process.env
     }
+
     if (!quiet) {
         options.stdio = "inherit";
     }
@@ -173,11 +187,8 @@ function addLineBreaker() {
     hasLineBreaker = true;
 }
 
-if (os.platform() === "win32") {
-    exec("chcp 65001", process.cwd(), true);
-}
-
 exports.createDirectory = createDirectory;
+exports.deleteEmptyDir = deleteEmptyDir;
 exports.deletePath = deletePath;
 exports.readFile = readFile;
 exports.writeFile = writeFile;

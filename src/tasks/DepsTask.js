@@ -33,61 +33,33 @@ const ActionTask = require("./ActionTask");
 const TaskRunner = require("./TaskRunner");
 const path = require("path");
 
-function compareVersion(versionA, versionB) {
-    if (versionA === versionB) {
-        return 0;
-    }
-    let listA = versionA.split(".");
-    let listB = versionB.split(".");
-    let length = Math.max(listA.length, listB.length);
-    for (let i = 0; i < length; i++) {
-        if (listA.length <= i) {
-            return -1;
-        }
-        let a = parseInt(listA[i]);
-        if (listB.length <= i) {
-            return 1;
-        }
-        let b = parseInt(listB[i]);
-        if (a === b) {
-            continue;
-        }
-        return a > b ? 1 : -1;
-    }
-    return 0;
-}
-
-function DepsTask(version, configFile, platform) {
-    this.version = version;
+function DepsTask(configFile, version, platform) {
     this.configFile = configFile;
+    this.version = version;
     this.platform = platform;
 }
 
 DepsTask.prototype.run = function (callback) {
-    if (!fs.existsSync(this.configFile)) {
-        callback && callback();
-        return;
-    }
-    let config = Config.parse(this.configFile, this.platform);
+    let config = Config.parse(this.configFile, this.version, this.platform);
     if (!config) {
-        callback && callback();
-        return;
-    }
-    if (compareVersion(this.version, config.version) < 0) {
-        Utils.error("DEPS file requires version: " + config.version);
-        Utils.error("The current depsync version: " + this.version);
-        Utils.error("Please update the depsync tool and then try again.");
         callback && callback();
         return;
     }
     let tasks = [];
     for (let item of config.repos) {
-        tasks.push(new RepoTask(item));
-        let depsFile = path.join(item.dir, "DEPS");
-        tasks.push(new DepsTask(this.version, depsFile, this.platform));
+        let shallowFile = path.join(item.dir, ".git", "shallow");
+        let commit = Utils.readFile(shallowFile).substr(0, 40);
+        if (commit !== item.commit) {
+            tasks.push(new RepoTask(item));
+            let depsFile = path.join(item.dir, "DEPS");
+            tasks.push(new DepsTask(depsFile, this.version, this.platform));
+        }
     }
     for (let item of config.files) {
-        tasks.push(new FileTask(item));
+        let cache = Utils.readFile(item.hashFile).substring(0, 40);
+        if (cache !== item.hash) {
+            tasks.push(new FileTask(item));
+        }
     }
     for (let item of config.actions) {
         tasks.push(new ActionTask(item));

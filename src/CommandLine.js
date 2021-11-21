@@ -40,6 +40,12 @@ const optionDeclarations = [
         description: "Synchronize the project in the given directory."
     },
     {
+        name: "clean",
+        shortName: "c",
+        type: "boolean",
+        description: "Clean the repos and files of current directory that do not exist in the DEPS file."
+    },
+    {
         name: "version",
         shortName: "v",
         type: "boolean",
