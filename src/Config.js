@@ -180,7 +180,7 @@ function parse(configFileName, version, platform) {
     let config = {};
     config.version = data.version ? data.version : "0.0.0";
     if (compareVersion(version, config.version) < 0) {
-        Utils.error("The DEPS config requires a high depsync tool version: " + configFileName);
+        Utils.error("The DEPS config requires a higher version of depsync tool: " + configFileName);
         Utils.error("Requires version: " + config.version);
         Utils.error("Current version: " + version);
         Utils.error("Please update the depsync tool and try again.");
