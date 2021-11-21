@@ -32,7 +32,6 @@ function ActionTask(item) {
 
 ActionTask.prototype.run = function (callback) {
     let item = this.item;
-    Utils.log("【depsync】executing action: " + item.command);
     Utils.exec(item.command, item.dir);
     callback && callback();
 };
