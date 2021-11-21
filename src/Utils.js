@@ -58,22 +58,6 @@ function createDirectory(filePath, mode) {
     }
 }
 
-function deleteDirectory(path) {
-    let files = [];
-    if (fs.existsSync(path)) {
-        files = fs.readdirSync(path);
-        files.forEach(function (file) {
-            let curPath = path + "/" + file;
-            if (fs.statSync(curPath).isDirectory()) {
-                deleteDirectory(curPath);
-            } else {
-                fs.unlinkSync(curPath);
-            }
-        });
-        fs.rmdirSync(path);
-    }
-}
-
 function deleteEmptyDir(path) {
     try {
         if (!fs.lstatSync(path).isDirectory()) {
@@ -89,11 +73,7 @@ function deleteEmptyDir(path) {
 
 function deletePath(path) {
     try {
-        if (fs.lstatSync(path).isDirectory()) {
-            deleteDirectory(path);
-        } else {
-            fs.unlinkSync(path);
-        }
+        fs.rmSync(path, { recursive: true, force: true });
     } catch (e) {
     }
 }
