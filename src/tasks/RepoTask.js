@@ -70,6 +70,7 @@ RepoTask.prototype.run = function (callback) {
     Utils.exec("git remote add origin " + url, item.dir);
     Utils.exec("git fetch --depth 1 origin " + item.commit, item.dir);
     Utils.exec("git reset --hard FETCH_HEAD -q", item.dir);
+    Utils.exec("git submodule update --quiet --init --recursive --depth=1", item.dir, false);
     callback && callback();
 };
 
