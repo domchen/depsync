@@ -99,7 +99,7 @@ function run(args) {
             process.exit(0);
         });
     } else {
-        let task = new DepsTask(configFileName, version, commandOptions.platform);
+        let task = new DepsTask(configFileName, version, commandOptions.platform, commandOptions["non-recursive"]);
         task.run(() => {
             process.exit(0);
         });

@@ -46,6 +46,12 @@ const optionDeclarations = [
         description: "Clean the repos and files of current directory that do not exist in the DEPS file."
     },
     {
+        name: "non-recursive",
+        shortName: "",
+        type: "boolean",
+        description: "Skip synchronizing the sub-projects."
+    },
+    {
         name: "version",
         shortName: "v",
         type: "boolean",

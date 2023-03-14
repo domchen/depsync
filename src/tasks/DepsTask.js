@@ -33,10 +33,11 @@ const ActionTask = require("./ActionTask");
 const TaskRunner = require("./TaskRunner");
 const path = require("path");
 
-function DepsTask(configFile, version, platform) {
+function DepsTask(configFile, version, platform, nonRecursive) {
     this.configFile = configFile;
     this.version = version;
     this.platform = platform;
+    this.nonRecursive = nonRecursive;
 }
 
 DepsTask.prototype.run = function (callback) {
@@ -51,8 +52,10 @@ DepsTask.prototype.run = function (callback) {
         let commit = Utils.readFile(shallowFile).substr(0, 40);
         if (commit !== item.commit) {
             tasks.push(new RepoTask(item));
-            let depsFile = path.join(item.dir, "DEPS");
-            tasks.push(new DepsTask(depsFile, this.version, this.platform));
+            if (!this.nonRecursive) {
+                let depsFile = path.join(item.dir, "DEPS");
+                tasks.push(new DepsTask(depsFile, this.version, this.platform, this.nonRecursive));
+            }
         }
     }
     for (let item of config.files) {
