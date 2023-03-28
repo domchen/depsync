@@ -25,6 +25,7 @@
 //////////////////////////////////////////////////////////////////////////////////////
 
 const path = require('path');
+const fs = require('fs');
 const Utils = require("../Utils");
 
 function AddLoginInfo(url, user, password) {
@@ -60,17 +61,30 @@ RepoTask.prototype.run = function (callback) {
     let item = this.item;
     let name = path.basename(item.dir);
     Utils.log("【depsync】checking out repository: " + name + "@" + item.commit);
-    Utils.deletePath(item.dir);
-    Utils.createDirectory(item.dir);
     let url = item.url;
     if (this.username && this.password) {
         url = AddLoginInfo(url, this.username, this.password);
     }
-    Utils.exec("git init -q", item.dir);
-    Utils.exec("git remote add origin " + url, item.dir);
-    Utils.exec("git fetch --depth 1 origin " + item.commit, item.dir);
-    Utils.exec("git reset --hard FETCH_HEAD -q", item.dir);
-    Utils.exec("git submodule update --quiet --init --recursive --depth=1", item.dir, false);
+    let shallowFile = path.join(item.dir, ".git", "shallow");
+    let wasShallow = fs.existsSync(shallowFile);
+    if (wasShallow !== item.shallow || item.shallow) {
+        Utils.deletePath(item.dir);
+    }
+    let fetchHeadFile = path.join(item.dir, ".git", "FETCH_HEAD");
+    if (!fs.existsSync(fetchHeadFile)) {
+        Utils.createDirectory(item.dir);
+        Utils.exec("git init -q", item.dir);
+        Utils.exec("git remote add origin " + url, item.dir);
+    }
+    if (item.shallow) {
+        Utils.exec("git fetch --depth 1 origin " + item.commit, item.dir);
+        Utils.exec("git reset --hard FETCH_HEAD -q", item.dir);
+        Utils.exec("git submodule update --quiet --init --recursive --depth=1", item.dir, false);
+    } else {
+        Utils.exec("git fetch origin " + item.commit, item.dir);
+        Utils.exec("git reset --hard FETCH_HEAD -q", item.dir);
+        Utils.exec("git submodule update --quiet --init --recursive", item.dir, false);
+    }
     callback && callback();
 };
 

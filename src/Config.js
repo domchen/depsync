@@ -84,6 +84,13 @@ function parseRepos(repos, vars, projectPath) {
         item.commit = formatString(item.commit, vars);
         item.dir = formatString(item.dir, vars);
         item.dir = path.resolve(projectPath, item.dir);
+        let shallow = item.shallow;
+        if (typeof shallow == "string") {
+            shallow = formatString(shallow, vars);
+            item.shallow = (shallow !== "false");
+        } else if (typeof shallow != "boolean") {
+            item.shallow = true;
+        }
         list.push(item);
     }
     return list;
