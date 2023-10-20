@@ -33,7 +33,7 @@ Here is an example of DEPS file:
 
 ```json
 {
-  "version": "1.2.8",
+  "version": "1.3.0",
   "vars": {
     "GIT_DOMAIN": "github.com",
     "SKIA_ROOT": "https://github.com/domchen/depsync/releases/download/1.0.1",
@@ -51,6 +51,15 @@ Here is an example of DEPS file:
         "url": "https://${GIT_DOMAIN}/libjpeg-turbo/libjpeg-turbo.git",
         "commit": "129f0cb76346ceede8f4d8d87dea8acb0809056c",
         "dir": "third_party/libjpeg-turbo"
+      },
+      {
+        "url": "https://${GIT_DOMAIN}/libpag/tgfx.git",
+        "commit": "2421ec829090ee61c245249405a4c079f9ecbc11",
+        "dir": "third_party/tgfx",
+        "keeps": [
+          "third_party",
+          "vendor_tools"
+        ]
       }
     ]
   },
