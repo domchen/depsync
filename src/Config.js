@@ -91,6 +91,15 @@ function parseRepos(repos, vars, projectPath) {
         } else if (typeof shallow != "boolean") {
             item.shallow = true;
         }
+        let keeps = item.keeps;
+        item.keeps = [];
+        if (keeps instanceof Array) {
+            for (let keep of keeps) {
+                keep = formatString(keep, vars);
+                keep = path.resolve(item.dir, keep);
+                item.keeps.push(keep);
+            }
+        }
         list.push(item);
     }
     return list;

@@ -71,9 +71,31 @@ function deleteEmptyDir(path) {
     }
 }
 
-function deletePath(path) {
+function deletePath(filePath, excludes) {
+    if (!excludes) {
+        try {
+            fs.rmSync(filePath, {recursive: true, force: true});
+        } catch (e) {
+        }
+        return;
+    }
     try {
-        fs.rmSync(path, { recursive: true, force: true });
+        let fileNames = fs.readdirSync(filePath);
+        for (let name of fileNames) {
+            let childPath = path.resolve(filePath, name);
+            let keep = false;
+            for (let exclude of excludes) {
+                if (childPath.indexOf(exclude) === 0) {
+                    keep = true;
+                    break;
+                }
+            }
+            if (!keep) {
+                deletePath(childPath);
+            } else if (childPath.length !== exclude.length) {
+                deletePath(childPath, excludes);
+            }
+        }
     } catch (e) {
     }
 }
@@ -144,9 +166,7 @@ function error(message) {
 
 function exec(cmd, dir, quiet) {
     let options = {
-        shell: os.platform() === "win32" ? "cmd.exe" : true,
-        cwd: dir,
-        env: process.env
+        shell: os.platform() === "win32" ? "cmd.exe" : true, cwd: dir, env: process.env
     }
 
     if (!quiet) {

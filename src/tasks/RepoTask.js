@@ -68,7 +68,7 @@ RepoTask.prototype.run = function (callback) {
     let shallowFile = path.join(item.dir, ".git", "shallow");
     let wasShallow = fs.existsSync(shallowFile);
     if (wasShallow !== item.shallow || item.shallow) {
-        Utils.deletePath(item.dir);
+        Utils.deletePath(item.dir, item.keeps);
     }
     let fetchHeadFile = path.join(item.dir, ".git", "FETCH_HEAD");
     if (!fs.existsSync(fetchHeadFile)) {
