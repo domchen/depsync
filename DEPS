@@ -19,7 +19,7 @@
       },
       {
         "url": "https://${GIT_DOMAIN}/libpag/tgfx.git",
-        "commit": "2421ec829090ee61c245249405a4c079f9ecbc11",
+        "commit": "0eba4e59f87c826876cc90be8fefcb72da844bce",
         "dir": "third_party/tgfx",
         "keeps": [
           "third_party",
