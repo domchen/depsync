@@ -1,5 +1,5 @@
 {
-  "version": "1.3.1",
+  "version": "1.3.2",
   "vars": {
     "GIT_DOMAIN": "github.com",
     "SKIA_ROOT": "https://github.com/domchen/depsync/releases/download/1.0.1",
@@ -18,12 +18,11 @@
         "dir": "third_party/libjpeg-turbo"
       },
       {
-        "url": "https://${GIT_DOMAIN}/libpag/tgfx.git",
-        "commit": "0eba4e59f87c826876cc90be8fefcb72da844bce",
+        "url": "https://${GIT_DOMAIN}/Tencent/tgfx.git",
+        "commit": "5948d72a0a5320a1ea055f23bc8312b07ab6d72c",
         "dir": "third_party/tgfx",
         "keeps": [
-          "third_party",
-          "vendor_tools"
+          "third_party"
         ]
       }
     ]

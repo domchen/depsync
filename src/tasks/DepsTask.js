@@ -50,8 +50,13 @@ DepsTask.prototype.run = function (callback) {
     for (let item of config.repos) {
         let shallowFile = path.join(item.dir, ".git", "shallow");
         let wasShallow = fs.existsSync(shallowFile);
-        let fetchHeadFile = path.join(item.dir, ".git", "FETCH_HEAD");
-        let commit = Utils.readFile(fetchHeadFile).substr(0, 40);
+        let commit = "";
+        if (wasShallow) {
+            commit = Utils.readFile(shallowFile).substr(0, 40);
+        } else {
+            let fetchHeadFile = path.join(item.dir, ".git", "FETCH_HEAD");
+            commit = Utils.readFile(fetchHeadFile).substr(0, 40);
+        }
         if (commit !== item.commit || wasShallow !== item.shallow) {
             tasks.push(new RepoTask(item));
             if (!this.nonRecursive) {
