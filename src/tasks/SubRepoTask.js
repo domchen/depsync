@@ -28,6 +28,8 @@ const fs = require("fs");
 const path = require("path");
 const Utils = require("../Utils");
 
+let LFSInited = false;
+
 function SubRepoTask(item) {
     this.item = item;
 }
@@ -51,7 +53,10 @@ SubRepoTask.prototype.run = function (callback) {
     }
     let glfConfig = path.resolve(repoPath, ".gitattributes");
     if (fs.existsSync(glfConfig)) {
-        Utils.exec("git lfs install", repoPath, true);
+        if (!LFSInited) {
+            Utils.exec("git lfs install", repoPath, true);
+            LFSInited = true;
+        }
         let result = Utils.execSafe("git lfs fsck", repoPath);
         if (result.indexOf("Git LFS fsck OK") === -1) {
             Utils.log("【depsync】downloading git lfs objects for: " + repoPath);
