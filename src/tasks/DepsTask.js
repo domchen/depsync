@@ -59,8 +59,10 @@ DepsTask.prototype.run = function (callback) {
         }
         if (commit !== item.commit || wasShallow !== item.shallow) {
             tasks.push(new RepoTask(item));
-            if (!this.nonRecursive) {
-                let depsFile = path.join(item.dir, "DEPS");
+        }
+        if (!this.nonRecursive) {
+            let depsFile = path.join(item.dir, "DEPS");
+            if (fs.existsSync(depsFile)) {
                 tasks.push(new DepsTask(depsFile, this.version, this.platform, this.nonRecursive));
             }
         }
