@@ -165,8 +165,15 @@ function error(message) {
 }
 
 function exec(cmd, dir, quiet) {
+    if (!dir) {
+        dir = process.cwd();
+    } else {
+        dir = path.resolve(dir);
+    }
     let options = {
-        shell: os.platform() === "win32" ? "cmd.exe" : true, cwd: dir, env: process.env
+        shell: os.platform() === "win32" ? "cmd.exe" : true,
+        cwd: dir,
+        env: process.env
     }
 
     if (!quiet) {
@@ -183,30 +190,28 @@ function exec(cmd, dir, quiet) {
     }
 }
 
-function addLineBreaker() {
-    hasLineBreaker = true;
+function execSafe(cmd, dir) {
+    if (!dir) {
+        dir = process.cwd();
+    } else {
+        dir = path.resolve(dir);
+    }
+    let options = {
+        shell: os.platform() === "win32" ? "cmd.exe" : true,
+        cwd: dir,
+        env: process.env
+    }
+
+    try {
+        let result = childProcess.spawnSync(cmd, options);
+        return result.stdout.toString();
+    } catch (e) {
+        return "";
+    }
 }
 
-function checkSubmodulesAndLFS(repoPath) {
-    let gitPath = path.resolve(repoPath, ".git");
-    if (!fs.existsSync(gitPath)) {
-        return;
-    }
-    let shallowFile = path.join(repoPath, ".git", "shallow");
-    let isShallow = fs.existsSync(shallowFile);
-    let modulesConfig = path.resolve(repoPath, ".gitmodules");
-    if (fs.existsSync(modulesConfig)) {
-        if (isShallow) {
-            exec("git submodule update --init --recursive --depth=1", repoPath, false);
-        } else {
-            exec("git submodule update --init --recursive", repoPath, false);
-        }
-    }
-    let glfConfig = path.resolve(repoPath, ".gitattributes");
-    if (fs.existsSync(glfConfig)) {
-        exec("git lfs install", repoPath, true);
-        exec("git lfs pull", repoPath, false);
-    }
+function addLineBreaker() {
+    hasLineBreaker = true;
 }
 
 exports.createDirectory = createDirectory;
@@ -215,7 +220,7 @@ exports.deletePath = deletePath;
 exports.readFile = readFile;
 exports.writeFile = writeFile;
 exports.exec = exec;
+exports.execSafe = execSafe;
 exports.log = log;
 exports.error = error;
 exports.addLineBreaker = addLineBreaker;
-exports.checkSubmodulesAndLFS = checkSubmodulesAndLFS;

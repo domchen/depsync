@@ -30,6 +30,7 @@ const Config = require("../Config");
 const RepoTask = require("./RepoTask");
 const FileTask = require("./FileTask");
 const ActionTask = require("./ActionTask");
+const SubRepoTask = require("./SubRepoTask");
 const TaskRunner = require("./TaskRunner");
 const path = require("path");
 
@@ -60,6 +61,8 @@ DepsTask.prototype.run = function (callback) {
         if (commit !== item.commit || wasShallow !== item.shallow) {
             tasks.push(new RepoTask(item));
         }
+        let subRepoTask = new SubRepoTask(item);
+        tasks.push(subRepoTask);
         if (!this.nonRecursive) {
             let depsFile = path.join(item.dir, "DEPS");
             tasks.push(new DepsTask(depsFile, this.version, this.platform, this.nonRecursive));
@@ -74,9 +77,10 @@ DepsTask.prototype.run = function (callback) {
     for (let item of config.actions) {
         tasks.push(new ActionTask(item));
     }
-
+    let item = {dir: path.dirname(this.configFile)};
+    let subRepoTask = new SubRepoTask(item);
+    tasks.push(subRepoTask);
     TaskRunner.runTasks(tasks, () => {
-        Utils.checkSubmodulesAndLFS(path.dirname(this.configFile));
         callback && callback();
     });
 };

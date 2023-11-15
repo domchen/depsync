@@ -83,7 +83,6 @@ RepoTask.prototype.run = function (callback) {
         Utils.exec("git fetch origin " + item.commit, item.dir);
         Utils.exec("GIT_LFS_SKIP_SMUDGE=1 git reset --hard FETCH_HEAD", item.dir);
     }
-    Utils.checkSubmodulesAndLFS(item.dir);
     callback && callback();
 };
 
