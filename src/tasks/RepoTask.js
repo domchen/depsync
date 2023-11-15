@@ -78,13 +78,12 @@ RepoTask.prototype.run = function (callback) {
     }
     if (item.shallow) {
         Utils.exec("git fetch --depth 1 origin " + item.commit, item.dir);
-        Utils.exec("git reset --hard FETCH_HEAD -q", item.dir);
-        Utils.exec("git submodule update --quiet --init --recursive --depth=1", item.dir, false);
+        Utils.exec("GIT_LFS_SKIP_SMUDGE=1 git reset --hard FETCH_HEAD", item.dir);
     } else {
         Utils.exec("git fetch origin " + item.commit, item.dir);
-        Utils.exec("git reset --hard FETCH_HEAD -q", item.dir);
-        Utils.exec("git submodule update --quiet --init --recursive", item.dir, false);
+        Utils.exec("GIT_LFS_SKIP_SMUDGE=1 git reset --hard FETCH_HEAD", item.dir);
     }
+    Utils.checkSubmodulesAndLFS(item.dir);
     callback && callback();
 };
 

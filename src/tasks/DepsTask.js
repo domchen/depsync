@@ -62,9 +62,7 @@ DepsTask.prototype.run = function (callback) {
         }
         if (!this.nonRecursive) {
             let depsFile = path.join(item.dir, "DEPS");
-            if (fs.existsSync(depsFile)) {
-                tasks.push(new DepsTask(depsFile, this.version, this.platform, this.nonRecursive));
-            }
+            tasks.push(new DepsTask(depsFile, this.version, this.platform, this.nonRecursive));
         }
     }
     for (let item of config.files) {
@@ -78,6 +76,7 @@ DepsTask.prototype.run = function (callback) {
     }
 
     TaskRunner.runTasks(tasks, () => {
+        Utils.checkSubmodulesAndLFS(path.dirname(this.configFile));
         callback && callback();
     });
 };

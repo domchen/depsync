@@ -187,6 +187,28 @@ function addLineBreaker() {
     hasLineBreaker = true;
 }
 
+function checkSubmodulesAndLFS(repoPath) {
+    let gitPath = path.resolve(repoPath, ".git");
+    if (!fs.existsSync(gitPath)) {
+        return;
+    }
+    let shallowFile = path.join(repoPath, ".git", "shallow");
+    let isShallow = fs.existsSync(shallowFile);
+    let modulesConfig = path.resolve(repoPath, ".gitmodules");
+    if (fs.existsSync(modulesConfig)) {
+        if (isShallow) {
+            exec("git submodule update --init --recursive --depth=1", repoPath, false);
+        } else {
+            exec("git submodule update --init --recursive", repoPath, false);
+        }
+    }
+    let glfConfig = path.resolve(repoPath, ".gitattributes");
+    if (fs.existsSync(glfConfig)) {
+        exec("git lfs install", repoPath, true);
+        exec("git lfs pull", repoPath, false);
+    }
+}
+
 exports.createDirectory = createDirectory;
 exports.deleteEmptyDir = deleteEmptyDir;
 exports.deletePath = deletePath;
@@ -196,3 +218,4 @@ exports.exec = exec;
 exports.log = log;
 exports.error = error;
 exports.addLineBreaker = addLineBreaker;
+exports.checkSubmodulesAndLFS = checkSubmodulesAndLFS;
