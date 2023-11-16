@@ -26,6 +26,7 @@
 
 const path = require('path');
 const fs = require('fs');
+const os = require('os')
 const Utils = require("../Utils");
 
 function AddLoginInfo(url, user, password) {
@@ -78,11 +79,11 @@ RepoTask.prototype.run = function (callback) {
     }
     if (item.shallow) {
         Utils.exec("git fetch --depth 1 origin " + item.commit, item.dir);
-        Utils.exec("GIT_LFS_SKIP_SMUDGE=1 git reset --hard FETCH_HEAD", item.dir);
     } else {
         Utils.exec("git fetch origin " + item.commit, item.dir);
-        Utils.exec("GIT_LFS_SKIP_SMUDGE=1 git reset --hard FETCH_HEAD", item.dir);
     }
+    process.env["GIT_LFS_SKIP_SMUDGE"]="1";
+    Utils.exec("git reset --hard FETCH_HEAD", item.dir);
     callback && callback();
 };
 
