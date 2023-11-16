@@ -61,7 +61,7 @@ DepsTask.prototype.run = function (callback) {
         }
         let repoDirty = false;
         if (commit !== item.commit || wasShallow !== item.shallow) {
-            repoDirty = false
+            repoDirty = true;
             tasks.push(new RepoTask(item));
         }
         if (repoDirty || fs.existsSync(this.unfinishFile)) {
