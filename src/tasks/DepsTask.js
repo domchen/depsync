@@ -39,6 +39,7 @@ function DepsTask(configFile, version, platform, nonRecursive) {
     this.version = version;
     this.platform = platform;
     this.nonRecursive = nonRecursive;
+    this.unfinishFile = path.join(path.dirname(this.configFile), ".git/.DEPS.unfinished");
 }
 
 DepsTask.prototype.run = function (callback) {
@@ -58,14 +59,18 @@ DepsTask.prototype.run = function (callback) {
             let fetchHeadFile = path.join(item.dir, ".git", "FETCH_HEAD");
             commit = Utils.readFile(fetchHeadFile).substr(0, 40);
         }
+        let repoDirty = false;
         if (commit !== item.commit || wasShallow !== item.shallow) {
+            repoDirty = false
             tasks.push(new RepoTask(item));
         }
-        let subRepoTask = new SubRepoTask(item);
-        tasks.push(subRepoTask);
-        if (!this.nonRecursive) {
-            let depsFile = path.join(item.dir, "DEPS");
-            tasks.push(new DepsTask(depsFile, this.version, this.platform, this.nonRecursive));
+        if (repoDirty || fs.existsSync(this.unfinishFile)) {
+            let subRepoTask = new SubRepoTask(item);
+            tasks.push(subRepoTask);
+            if (!this.nonRecursive) {
+                let depsFile = path.join(item.dir, "DEPS");
+                tasks.push(new DepsTask(depsFile, this.version, this.platform, this.nonRecursive));
+            }
         }
     }
     for (let item of config.files) {
@@ -80,7 +85,10 @@ DepsTask.prototype.run = function (callback) {
     let item = {dir: path.dirname(this.configFile)};
     let subRepoTask = new SubRepoTask(item);
     tasks.push(subRepoTask);
+    Utils.writeFile(this.unfinishFile, "depsync is syncing...");
     TaskRunner.runTasks(tasks, () => {
+        Utils.deletePath(this.unfinishFile);
+        Utils.deleteEmptyDir(path.dirname(this.unfinishFile));
         callback && callback();
     });
 };
