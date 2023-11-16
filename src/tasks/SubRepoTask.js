@@ -41,15 +41,9 @@ SubRepoTask.prototype.run = function (callback) {
         callback && callback();
         return;
     }
-    let shallowFile = path.join(repoPath, ".git", "shallow");
-    let isShallow = fs.existsSync(shallowFile);
     let modulesConfig = path.resolve(repoPath, ".gitmodules");
     if (fs.existsSync(modulesConfig)) {
-        if (isShallow) {
-            Utils.exec("git submodule update --init --recursive --depth=1", repoPath, false);
-        } else {
-            Utils.exec("git submodule update --init --recursive", repoPath, false);
-        }
+        Utils.exec("git submodule update --init --recursive --depth=1", repoPath, false);
     }
     let glfConfig = path.resolve(repoPath, ".gitattributes");
     if (fs.existsSync(glfConfig)) {
