@@ -54,10 +54,13 @@ DepsTask.prototype.run = function (callback) {
         let wasShallow = fs.existsSync(shallowFile);
         let commit = "";
         if (wasShallow) {
-            commit = Utils.readFile(shallowFile).substr(0, 40);
+            let commits = Utils.readFile(shallowFile).split("\n");
+            if (commits.length > 0) {
+                commit = commits[commits.length - 1].trim();
+            }
         } else {
             let fetchHeadFile = path.join(item.dir, ".git", "FETCH_HEAD");
-            commit = Utils.readFile(fetchHeadFile).substr(0, 40);
+            commit = Utils.readFile(fetchHeadFile).substring(0, 40);
         }
         let repoDirty = false;
         if (commit !== item.commit || wasShallow !== item.shallow) {

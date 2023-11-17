@@ -45,8 +45,8 @@ SubRepoTask.prototype.run = function (callback) {
     if (fs.existsSync(modulesConfig)) {
         Utils.exec("git submodule update --init --recursive --depth=1", repoPath, false);
     }
-    let glfConfig = path.resolve(repoPath, ".gitattributes");
-    if (fs.existsSync(glfConfig)) {
+    let lfsConfig = path.resolve(repoPath, ".gitattributes");
+    if (fs.existsSync(lfsConfig)) {
         if (!LFSInited) {
             Utils.exec("git lfs install", repoPath, true);
             LFSInited = true;

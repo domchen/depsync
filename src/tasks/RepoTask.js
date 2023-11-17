@@ -68,8 +68,14 @@ RepoTask.prototype.run = function (callback) {
     }
     let shallowFile = path.join(item.dir, ".git", "shallow");
     let wasShallow = fs.existsSync(shallowFile);
+    let lfsDir = path.join(item.dir, ".git", "lfs");
+    let indexFile = path.join(item.dir, ".git", "index");
+    let tempLFSDir = path.join(item.dir + ".git", "lfs");
+    let tempIndexFile = path.join(item.dir + ".git", "index");
     if (wasShallow !== item.shallow || item.shallow) {
-        Utils.deletePath(item.dir, item.keeps);
+        Utils.movePath(lfsDir, tempLFSDir);
+        Utils.movePath(indexFile, tempIndexFile);
+        Utils.deletePath(path.join(item.dir + ".git"));
     }
     let fetchHeadFile = path.join(item.dir, ".git", "FETCH_HEAD");
     if (!fs.existsSync(fetchHeadFile)) {
@@ -79,11 +85,21 @@ RepoTask.prototype.run = function (callback) {
     }
     if (item.shallow) {
         Utils.exec("git fetch --depth 1 origin " + item.commit, item.dir);
+        Utils.movePath(tempLFSDir, lfsDir);
+        Utils.movePath(tempIndexFile, indexFile);
+        Utils.deleteEmptyDir(path.dirname(tempIndexFile));
     } else {
         Utils.exec("git fetch origin " + item.commit, item.dir);
     }
-    process.env["GIT_LFS_SKIP_SMUDGE"]="1";
-    Utils.exec("git reset --hard FETCH_HEAD", item.dir);
+    process.env["GIT_LFS_SKIP_SMUDGE"] = "1";
+    Utils.exec("git reset --hard FETCH_HEAD && git clean -f", item.dir);
+    if (item.shallow) {
+        Utils.writeFile(shallowFile, item.commit);
+    }
+    let lfsConfig = path.join(item.dir, ".gitattributes");
+    if (fs.existsSync(lfsConfig)) {
+        Utils.exec("git lfs prune", item.dir);
+    }
     callback && callback();
 };
 

@@ -100,6 +100,20 @@ function deletePath(filePath, excludes) {
     }
 }
 
+function movePath(srcPath, dstPath) {
+    if (!fs.existsSync(srcPath)) {
+        return;
+    }
+    try {
+        fs.renameSync(srcPath, dstPath);
+    } catch (e) {
+        if (e.code === "EXDEV") {
+            copyPath(srcPath, dstPath);
+            deletePath(srcPath);
+        }
+    }
+}
+
 function readFile(filePath) {
     try {
         return fs.readFileSync(filePath, "utf-8");
@@ -217,6 +231,7 @@ function addLineBreaker() {
 exports.createDirectory = createDirectory;
 exports.deleteEmptyDir = deleteEmptyDir;
 exports.deletePath = deletePath;
+exports.movePath = movePath;
 exports.readFile = readFile;
 exports.writeFile = writeFile;
 exports.exec = exec;
