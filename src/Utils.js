@@ -101,10 +101,13 @@ function deletePath(filePath, excludes) {
 }
 
 function movePath(srcPath, dstPath) {
+    srcPath = path.resolve(srcPath);
+    dstPath = path.resolve(dstPath);
     if (!fs.existsSync(srcPath)) {
         return;
     }
     try {
+        createDirectory(path.dirname(dstPath));
         fs.renameSync(srcPath, dstPath);
     } catch (e) {
         if (e.code === "EXDEV") {
