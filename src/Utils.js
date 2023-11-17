@@ -110,10 +110,6 @@ function movePath(srcPath, dstPath) {
         createDirectory(path.dirname(dstPath));
         fs.renameSync(srcPath, dstPath);
     } catch (e) {
-        if (e.code === "EXDEV") {
-            copyPath(srcPath, dstPath);
-            deletePath(srcPath);
-        }
     }
 }
 

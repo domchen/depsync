@@ -54,7 +54,13 @@ SubRepoTask.prototype.run = function (callback) {
         let result = Utils.execSafe("git lfs fsck", repoPath);
         if (result.indexOf("Git LFS fsck OK") === -1) {
             Utils.log("【depsync】downloading git lfs objects to: " + repoPath);
-            Utils.exec("git lfs pull", repoPath, false);
+            let lfsDir = path.join(repoPath, ".git", "lfs");
+            let lfsBakDir = path.join(repoPath, ".git", "lfs.bak");
+            if (fs.existsSync(lfsBakDir)) {
+                Utils.deletePath(lfsDir);
+                Utils.movePath(lfsBakDir, lfsDir);
+            }
+            Utils.exec("git lfs pull && git lfs prune", repoPath, false);
         }
     }
     callback && callback();

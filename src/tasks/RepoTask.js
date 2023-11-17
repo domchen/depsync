@@ -67,11 +67,9 @@ RepoTask.prototype.run = function (callback) {
         url = AddLoginInfo(url, this.username, this.password);
     }
     let lfsDir = path.join(item.dir, ".git", "lfs");
-    let indexFile = path.join(item.dir, ".git", "index");
-    let tempLFSDir = path.join(item.dir + ".git", "lfs");
-    let tempIndexFile = path.join(item.dir + ".git", "index");
+    let lfsBakDir = path.join(item.dir, ".git", "lfs.bak");
+    let tempLFSDir = path.join(item.dir, ".lfs.bak");
     Utils.movePath(lfsDir, tempLFSDir);
-    Utils.movePath(indexFile, tempIndexFile);
     Utils.deletePath(path.join(item.dir, ".git"));
     if (!fs.existsSync(item.dir)) {
         Utils.createDirectory(item.dir);
@@ -79,17 +77,9 @@ RepoTask.prototype.run = function (callback) {
     Utils.exec("git init -q", item.dir);
     Utils.exec("git remote add origin " + url, item.dir);
     Utils.exec("git fetch --depth 1 origin " + item.commit, item.dir);
-    Utils.movePath(tempLFSDir, lfsDir);
-    Utils.movePath(tempIndexFile, indexFile);
-    Utils.deleteEmptyDir(path.dirname(tempIndexFile));
+    Utils.movePath(tempLFSDir, lfsBakDir);
     process.env["GIT_LFS_SKIP_SMUDGE"] = "1";
     Utils.exec("git reset --hard FETCH_HEAD && git clean -f -q", item.dir);
-    let shallowFile = path.join(item.dir, ".git", "shallow");
-    Utils.writeFile(shallowFile, item.commit + "\n");
-    let lfsConfig = path.join(item.dir, ".gitattributes");
-    if (fs.existsSync(lfsConfig)) {
-        Utils.exec("git lfs prune", item.dir);
-    }
     callback && callback();
 };
 
