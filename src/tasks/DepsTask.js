@@ -51,20 +51,9 @@ DepsTask.prototype.run = function (callback) {
     let tasks = [];
     for (let item of config.repos) {
         let shallowFile = path.join(item.dir, ".git", "shallow");
-        let wasShallow = fs.existsSync(shallowFile);
-        let commit = "";
-        if (wasShallow) {
-            let commits = Utils.readFile(shallowFile).split("\n");
-            if (commits.length > 0) {
-                commit = commits[commits.length - 1].trim();
-            }
-        } else {
-            let fetchHeadFile = path.join(item.dir, ".git", "FETCH_HEAD");
-            commit = Utils.readFile(fetchHeadFile).substring(0, 40);
-        }
-        let repoDirty = false;
-        if (commit !== item.commit || wasShallow !== item.shallow) {
-            repoDirty = true;
+        let commit = Utils.readFile(shallowFile).substring(0, 40);
+        let repoDirty = commit !== item.commit;
+        if (repoDirty) {
             tasks.push(new RepoTask(item));
         }
         if (repoDirty || fs.existsSync(this.unfinishFile)) {

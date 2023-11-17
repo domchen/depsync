@@ -53,7 +53,7 @@ SubRepoTask.prototype.run = function (callback) {
         }
         let result = Utils.execSafe("git lfs fsck", repoPath);
         if (result.indexOf("Git LFS fsck OK") === -1) {
-            Utils.log("【depsync】downloading git lfs objects for: " + repoPath);
+            Utils.log("【depsync】downloading git lfs objects to: " + repoPath);
             Utils.exec("git lfs pull", repoPath, false);
         }
     }

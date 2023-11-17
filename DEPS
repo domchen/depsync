@@ -20,10 +20,7 @@
       {
         "url": "https://${GIT_DOMAIN}/Tencent/tgfx.git",
         "commit": "5948d72a0a5320a1ea055f23bc8312b07ab6d72c",
-        "dir": "third_party/tgfx",
-        "keeps": [
-          "third_party"
-        ]
+        "dir": "third_party/tgfx"
       }
     ]
   },
