@@ -5,8 +5,19 @@
 
 # Introduction
 
-Depsync is a command line tool for automatically synchronizing the dependencies of a project by the DEPS configuration file.
+A command line tool for automatically synchronizing the dependencies of a project by the DEPS configuration file.
 
+# Advantages
+
+The depsync tool provides a convenient way to download git repositories and files from the Internet, offering several key advantages over similar capabilities like git-submodules and git-lfs:
+
+- Repositories are always checked out with a depth of 1 without any extra command arguments, ensuring that the main project maintains a relatively compact size at all times.
+- Automatically download git-submodules and git-lfs files for your main project and third-party repositories without the need to run commands on each one individually.
+- During downloading process, git-lfs files that already exist in the local cache can be skipped. This approach works even for the shallow cloned repositories.
+- Enable the execution of custom actions after synchronization. For instance, you can include commands in the DEPS file to facilitate cleaning tasks and other operations.
+- Repositories and files can be configured separately for each platform to avoid downloading unnecessary dependencies and only acquire platform-specific ones.
+
+With all the advantages described above, all it takes is one straightforward command `depsync`. Execute it in the root of your main project, and you're good to go!
 
 # Installation
 
