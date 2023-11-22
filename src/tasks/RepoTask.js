@@ -79,7 +79,7 @@ RepoTask.prototype.run = function (callback) {
     Utils.exec("git fetch --depth 1 origin " + item.commit, item.dir);
     Utils.movePath(tempLFSDir, lfsBakDir);
     process.env["GIT_LFS_SKIP_SMUDGE"] = "1";
-    Utils.exec("git reset --hard FETCH_HEAD && git clean -f -q", item.dir);
+    Utils.exec("git reset --hard FETCH_HEAD && git clean -df -q", item.dir);
     callback && callback();
 };
 
