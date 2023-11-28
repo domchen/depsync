@@ -63,6 +63,11 @@ function makePadding(paddingLength) {
 
 
 function run(args) {
+    let version = process.versions.node;
+    if (Utils.compareVersion(version, "14.14.0") < 0) {
+        Utils.error("Node.js version must be greater than or equal to 14.14.0\n");
+        process.exit(1);
+    }
     let commandOptions = CommandLine.parse(args);
     if (commandOptions.errors.length > 0) {
         Utils.error(commandOptions.errors.join("\n") + "\n");

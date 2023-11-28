@@ -138,30 +138,6 @@ function filterByPlatform(items, hostPlatform) {
     return list;
 }
 
-function compareVersion(versionA, versionB) {
-    if (versionA === versionB) {
-        return 0;
-    }
-    let listA = versionA.split(".");
-    let listB = versionB.split(".");
-    let length = Math.max(listA.length, listB.length);
-    for (let i = 0; i < length; i++) {
-        if (listA.length <= i) {
-            return -1;
-        }
-        let a = parseInt(listA[i]);
-        if (listB.length <= i) {
-            return 1;
-        }
-        let b = parseInt(listB[i]);
-        if (a === b) {
-            continue;
-        }
-        return a > b ? 1 : -1;
-    }
-    return 0;
-}
-
 function parse(configFileName, version, platform) {
     if (!fs.existsSync(configFileName)) {
         return null;
@@ -171,7 +147,7 @@ function parse(configFileName, version, platform) {
     try {
         data = JSON.parse(jsonText);
     } catch (e) {
-        if (jsonText.trimLeft().indexOf("{") === 0) {
+        if (jsonText.trim().indexOf("{") === 0) {
             Utils.error("The DEPS config file is not a valid JSON file: " + configFileName);
         }
         return null;
@@ -179,7 +155,7 @@ function parse(configFileName, version, platform) {
     let projectPath = path.dirname(configFileName);
     let config = {};
     config.version = data.version ? data.version : "0.0.0";
-    if (compareVersion(version, config.version) < 0) {
+    if (Utils.compareVersion(version, config.version) < 0) {
         Utils.error("The DEPS config requires a higher version of depsync tool: " + configFileName);
         Utils.error("Requires version: " + config.version);
         Utils.error("Current version: " + version);

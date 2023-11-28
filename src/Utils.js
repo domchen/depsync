@@ -223,6 +223,30 @@ function execSafe(cmd, dir) {
     }
 }
 
+function compareVersion(versionA, versionB) {
+    if (versionA === versionB) {
+        return 0;
+    }
+    let listA = versionA.split(".");
+    let listB = versionB.split(".");
+    let length = Math.max(listA.length, listB.length);
+    for (let i = 0; i < length; i++) {
+        if (listA.length <= i) {
+            return -1;
+        }
+        let a = parseInt(listA[i]);
+        if (listB.length <= i) {
+            return 1;
+        }
+        let b = parseInt(listB[i]);
+        if (a === b) {
+            continue;
+        }
+        return a > b ? 1 : -1;
+    }
+    return 0;
+}
+
 function addLineBreaker() {
     hasLineBreaker = true;
 }
@@ -237,4 +261,5 @@ exports.exec = exec;
 exports.execSafe = execSafe;
 exports.log = log;
 exports.error = error;
+exports.compareVersion = compareVersion;
 exports.addLineBreaker = addLineBreaker;
