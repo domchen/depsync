@@ -47,7 +47,8 @@ SubRepoTask.prototype.run = function (callback) {
     }
     let lfsConfig = path.resolve(repoPath, ".gitattributes");
     if (fs.existsSync(lfsConfig)) {
-        if (!LFSInited) {
+        let prePushFile = path.resolve(repoPath, ".git", "hooks", "pre-push");
+        if (!LFSInited && !fs.existsSync(prePushFile)) {
             Utils.exec("git lfs install", repoPath, true);
             LFSInited = true;
         }
