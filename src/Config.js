@@ -159,7 +159,8 @@ function parse(configFileName, version, platform) {
         Utils.error("The DEPS config requires a higher version of depsync tool: " + configFileName);
         Utils.error("Requires version: " + config.version);
         Utils.error("Current version: " + version);
-        Utils.error("Please update the depsync tool and try again.");
+        Utils.error("To upgrade the depsync tool, run:");
+        Utils.error("  `npm install -g depsync`");
         return null;
     }
     let files = filterByPlatform(data.files, platform);

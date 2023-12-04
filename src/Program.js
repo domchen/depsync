@@ -63,9 +63,11 @@ function makePadding(paddingLength) {
 
 
 function run(args) {
-    let version = process.versions.node;
-    if (Utils.compareVersion(version, "14.14.0") < 0) {
-        Utils.error("Node.js version must be greater than or equal to 14.14.0\n");
+    let nodeVersion = process.versions.node;
+    if (Utils.compareVersion(nodeVersion, "14.14.0") < 0) {
+        Utils.error("The depsync tool requires Node.js version 14.14.0 or later. ");
+        Utils.error("Current version: " + nodeVersion);
+        Utils.error("Please visit https://nodejs.org to download the latest version.");
         process.exit(1);
     }
     let commandOptions = CommandLine.parse(args);
