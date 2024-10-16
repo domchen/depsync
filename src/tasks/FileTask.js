@@ -100,15 +100,14 @@ function parseTar(buffer, outputDir) {
 function decompressTarBz2Sync(inputPath, outputDir) {
     // 读取 .tar.bz2 文件
     const compressedData = fs.readFileSync(inputPath);
-
     // 解压 Bzip2
     const decompressedData = Compress.Bzip2.decompressFile(compressedData);
-
     // 将解压后的数据转换为 Buffer
     const tarBuffer = Buffer.from(decompressedData);
-
     // 解析并提取 TAR
     parseTar(tarBuffer, outputDir);
+    // 删除原始文件
+    Utils.deletePath(filePath);
 }
 
 
