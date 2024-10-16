@@ -79,38 +79,38 @@ function unzipFile(filePath, dir) {
     Utils.deletePath(filePath);
 }
 
-function loadMultiParts(urls, filePath, callback) {
+function loadMultiParts(urls, filePath, timeout, callback) {
     if (urls.length === 0) {
         callback && callback();
         return;
     }
     let url = urls.shift();
-    loadSingleFile(url, filePath, function (error) {
+    loadSingleFile(url, filePath, timeout, function (error) {
         if (error) {
             callback && callback(error);
             return;
         }
-        loadMultiParts(urls, filePath, callback);
+        loadMultiParts(urls, filePath, timeout, callback);
     }, {flags: 'a'});
 }
 
-function loadSingleFile(url, filePath, callback, options) {
+function loadSingleFile(url, filePath, timeout, callback, options) {
     let retryTimes = 0;
     Utils.log("Downloading: " + url);
-    loadSingleFileWithTimeOut(url, filePath, onFinish, options);
+    loadSingleFileWithTimeOut(url, filePath, timeout, onFinish, options);
 
     function onFinish(error) {
         if (error && error.message === "timeout" && retryTimes < 3) {
             retryTimes++;
             Utils.log("Downloading retry " + retryTimes + ": " + url);
-            loadSingleFileWithTimeOut(url, filePath, onFinish, options);
+            loadSingleFileWithTimeOut(url, filePath, timeout, onFinish, options);
         } else {
             callback(error);
         }
     }
 }
 
-function loadSingleFileWithTimeOut(url, filePath, callback, options) {
+function loadSingleFileWithTimeOut(url, filePath, timeout, callback, options) {
     let httpClient = url.slice(0, 5) === 'https' ? https : http;
     try {
         Utils.createDirectory(path.dirname(filePath));
@@ -152,7 +152,7 @@ function loadSingleFileWithTimeOut(url, filePath, callback, options) {
             file.close();
             outputError = error;
         });
-        request.setTimeout(15000, function () {
+        request.setTimeout(timeout, function () {
             request.abort();
             file.close();
             outputError = new Error("timeout");
@@ -183,9 +183,9 @@ FileTask.prototype.run = function (callback) {
         for (let tail of item.multipart) {
             urls.push(item.url + tail);
         }
-        loadMultiParts(urls, filePath, onFinish);
+        loadMultiParts(urls, filePath, item.timeout, onFinish);
     } else {
-        loadSingleFile(item.url, filePath, onFinish);
+        loadSingleFile(item.url, filePath, item.timeout, onFinish);
     }
 
     function onFinish(error) {
