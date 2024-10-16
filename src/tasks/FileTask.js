@@ -30,7 +30,8 @@ const https = require('follow-redirects').https;
 const path = require("path");
 const AdmZip = require('adm-zip');
 const ProgressBar = require("progress");
-const Utils = require('../Utils')
+const Utils = require('../Utils');
+const Compress = require('compressjs');
 
 
 function getEntryName(entry) {
@@ -41,8 +42,84 @@ function getEntryName(entry) {
     return entryName;
 }
 
+function parseTar(buffer, outputDir) {
+    let offset = 0;
+    const BLOCK_SIZE = 512;
+
+    while (offset < buffer.length) {
+        const header = buffer.slice(offset, offset + BLOCK_SIZE);
+        offset += BLOCK_SIZE;
+
+        // 检查是否为空块，两个连续的空块表示结束
+        const isEnd = header.every(byte => byte === 0);
+        if (isEnd) break;
+
+        // 解析文件名
+        let fileName = '';
+        for (let i = 0; i < 100; i++) {
+            if (header[i] === 0) break;
+            fileName += String.fromCharCode(header[i]);
+        }
+
+        // 解析文件大小（Octal）
+        let sizeOctal = '';
+        for (let i = 124; i < 124 + 12; i++) {
+            if (header[i] === 0) break;
+            sizeOctal += String.fromCharCode(header[i]);
+        }
+        const fileSize = parseInt(sizeOctal.trim(), 8);
+
+        // 解析文件类型
+        const typeFlag = String.fromCharCode(header[156]);
+
+        // 忽略非普通文件
+        if (typeFlag !== '0' && typeFlag !== '\0') {
+            // 跳过该文件的数据部分
+            offset += Math.ceil(fileSize / BLOCK_SIZE) * BLOCK_SIZE;
+            continue;
+        }
+
+        // 提取文件数据
+        const fileData = buffer.slice(offset, offset + fileSize);
+        offset += Math.ceil(fileSize / BLOCK_SIZE) * BLOCK_SIZE;
+
+        // 创建目录结构
+        const fullPath = path.join(outputDir, fileName);
+        const dirName = path.dirname(fullPath);
+        if (!fs.existsSync(dirName)) {
+            fs.mkdirSync(dirName, { recursive: true });
+        }
+
+        // 写入文件
+        fs.writeFileSync(fullPath, fileData);
+        console.log(`解压文件: ${fullPath}`);
+    }
+}
+
+// 主解压函数
+function decompressTarBz2Sync(inputPath, outputDir) {
+    // 读取 .tar.bz2 文件
+    const compressedData = fs.readFileSync(inputPath);
+
+    // 解压 Bzip2
+    const decompressedData = Compress.Bzip2.decompressFile(compressedData);
+
+    // 将解压后的数据转换为 Buffer
+    const tarBuffer = Buffer.from(decompressedData);
+
+    // 解析并提取 TAR
+    parseTar(tarBuffer, outputDir);
+}
+
+
 function unzipFile(filePath, dir) {
     Utils.log("Unzipping: " + filePath);
+
+    // bz2 文件单独处理
+    if (filePath.endsWith('.tar.bz2')) {
+        decompressTarBz2Sync(filePath, dir);
+        return;
+    }
     let zip = new AdmZip(filePath);
     let entries = zip.getEntries();
     let rootNames = [];
@@ -198,7 +275,7 @@ FileTask.prototype.run = function (callback) {
             try {
                 unzipFile(filePath, item.dir);
             } catch (e) {
-                Utils.error("Cannot unzip file: " + filePath);
+                Utils.error("Cannot unzip file: " +  error.message);
                 process.exit(1);
             }
         }

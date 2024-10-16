@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "adm-zip": "latest",
+    "compressjs": "latest",
     "follow-redirects": "latest",
     "progress": "latest"
   }
