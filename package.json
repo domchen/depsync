@@ -1,6 +1,6 @@
 {
   "name": "depsync",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "author": "Dom Chen",
   "homepage": "https://github.com/domchen/depsync",
   "description": "Automatically synchronize the dependencies of a project by the DEPS configuration file.",
@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "adm-zip": "latest",
+    "compressjs": "latest",
     "follow-redirects": "latest",
     "progress": "latest"
   }

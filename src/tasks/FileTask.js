@@ -30,7 +30,8 @@ const https = require('follow-redirects').https;
 const path = require("path");
 const AdmZip = require('adm-zip');
 const ProgressBar = require("progress");
-const Utils = require('../Utils')
+const Utils = require('../Utils');
+const Compress = require('compressjs');
 
 
 function getEntryName(entry) {
@@ -41,8 +42,106 @@ function getEntryName(entry) {
     return entryName;
 }
 
+function parseTar(buffer, outputDir) {
+    let offset = 0;
+    const BLOCK_SIZE = 512;
+
+    let topLevelDir = null;
+    let isFirstFile = true;
+
+    while (offset < buffer.length) {
+        const header = buffer.slice(offset, offset + BLOCK_SIZE);
+        offset += BLOCK_SIZE;
+
+        // Check if it's an empty block, two consecutive empty blocks indicate the end
+        const isEnd = header.every(byte => byte === 0);
+        if (isEnd) break;
+
+        // Parse file name
+        let fileName = '';
+        for (let i = 0; i < 100; i++) {
+            if (header[i] === 0) break;
+            fileName += String.fromCharCode(header[i]);
+        }
+
+        // Parse file size (Octal)
+        let sizeOctal = '';
+        for (let i = 124; i < 124 + 12; i++) {
+            if (header[i] === 0) break;
+            sizeOctal += String.fromCharCode(header[i]);
+        }
+        const fileSize = parseInt(sizeOctal.trim(), 8);
+
+        // Parse file type
+        const typeFlag = String.fromCharCode(header[156]);
+
+        // Ignore non-regular files
+        if (typeFlag !== '0' && typeFlag !== '\0') {
+            // Skip the data part of the file
+            offset += Math.ceil(fileSize / BLOCK_SIZE) * BLOCK_SIZE;
+            continue;
+        }
+
+        // Extract file data
+        const fileData = buffer.slice(offset, offset + fileSize);
+        offset += Math.ceil(fileSize / BLOCK_SIZE) * BLOCK_SIZE;
+
+        // Handle file path, remove top-level directory
+        if (isFirstFile) {
+            const parts = fileName.split('/');
+            if (parts.length > 1) {
+                topLevelDir = parts[0];
+            }
+            isFirstFile = false;
+        }
+
+        let relativePath = fileName;
+        if (topLevelDir) {
+            const prefix = `${topLevelDir}/`;
+            if (fileName.startsWith(prefix)) {
+                relativePath = fileName.slice(prefix.length);
+            }
+        }
+
+        // If the relative path is empty (i.e., the top-level directory itself), skip it
+        if (!relativePath) continue;
+
+        // Create directory structure
+        const fullPath = path.join(outputDir, relativePath);
+        const dirName = path.dirname(fullPath);
+        if (!fs.existsSync(dirName)) {
+            fs.mkdirSync(dirName, { recursive: true });
+        }
+
+        // Write file
+        fs.writeFileSync(fullPath, fileData);
+        console.log(`Extracted file: ${fullPath}`);
+    }
+}
+
+// Main decompression function
+function decompressTarBz2Sync(inputPath, outputDir) {
+    // Read .tar.bz2 file
+    const compressedData = fs.readFileSync(inputPath);
+    // Decompress Bzip2
+    const decompressedData = Compress.Bzip2.decompressFile(compressedData);
+    // Convert decompressed data to Buffer
+    const tarBuffer = Buffer.from(decompressedData);
+    // Parse and extract TAR
+    parseTar(tarBuffer, outputDir);
+    // Delete original file
+    Utils.deletePath(inputPath);
+}
+
+
 function unzipFile(filePath, dir) {
     Utils.log("Unzipping: " + filePath);
+
+    // Handle bz2 files separately
+    if (filePath.endsWith('.tar.bz2')) {
+        decompressTarBz2Sync(filePath, dir);
+        return;
+    }
     let zip = new AdmZip(filePath);
     let entries = zip.getEntries();
     let rootNames = [];
@@ -79,38 +178,38 @@ function unzipFile(filePath, dir) {
     Utils.deletePath(filePath);
 }
 
-function loadMultiParts(urls, filePath, callback) {
+function loadMultiParts(urls, filePath, timeout, callback) {
     if (urls.length === 0) {
         callback && callback();
         return;
     }
     let url = urls.shift();
-    loadSingleFile(url, filePath, function (error) {
+    loadSingleFile(url, filePath, timeout, function (error) {
         if (error) {
             callback && callback(error);
             return;
         }
-        loadMultiParts(urls, filePath, callback);
+        loadMultiParts(urls, filePath, timeout, callback);
     }, {flags: 'a'});
 }
 
-function loadSingleFile(url, filePath, callback, options) {
+function loadSingleFile(url, filePath, timeout, callback, options) {
     let retryTimes = 0;
     Utils.log("Downloading: " + url);
-    loadSingleFileWithTimeOut(url, filePath, onFinish, options);
+    loadSingleFileWithTimeOut(url, filePath, timeout, onFinish, options);
 
     function onFinish(error) {
         if (error && error.message === "timeout" && retryTimes < 3) {
             retryTimes++;
             Utils.log("Downloading retry " + retryTimes + ": " + url);
-            loadSingleFileWithTimeOut(url, filePath, onFinish, options);
+            loadSingleFileWithTimeOut(url, filePath, timeout, onFinish, options);
         } else {
             callback(error);
         }
     }
 }
 
-function loadSingleFileWithTimeOut(url, filePath, callback, options) {
+function loadSingleFileWithTimeOut(url, filePath, timeout, callback, options) {
     let httpClient = url.slice(0, 5) === 'https' ? https : http;
     try {
         Utils.createDirectory(path.dirname(filePath));
@@ -152,7 +251,7 @@ function loadSingleFileWithTimeOut(url, filePath, callback, options) {
             file.close();
             outputError = error;
         });
-        request.setTimeout(15000, function () {
+        request.setTimeout(timeout, function () {
             request.abort();
             file.close();
             outputError = new Error("timeout");
@@ -183,9 +282,9 @@ FileTask.prototype.run = function (callback) {
         for (let tail of item.multipart) {
             urls.push(item.url + tail);
         }
-        loadMultiParts(urls, filePath, onFinish);
+        loadMultiParts(urls, filePath, item.timeout, onFinish);
     } else {
-        loadSingleFile(item.url, filePath, onFinish);
+        loadSingleFile(item.url, filePath, item.timeout, onFinish);
     }
 
     function onFinish(error) {
@@ -198,7 +297,8 @@ FileTask.prototype.run = function (callback) {
             try {
                 unzipFile(filePath, item.dir);
             } catch (e) {
-                Utils.error("Cannot unzip file: " + filePath);
+                Utils.error("Cannot unzip file: " +  filePath);
+                console.error(e);
                 process.exit(1);
             }
         }

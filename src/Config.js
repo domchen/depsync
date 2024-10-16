@@ -69,6 +69,7 @@ function parseFiles(files, vars, projectPath) {
         } else if (typeof unzip != "boolean") {
             item.unzip = false;
         }
+        item.timeout = item.timeout ? parseInt(item.timeout) : 15000; // Default to 15000 ms if not specified
         list.push(item);
     }
     return list;
