@@ -46,6 +46,9 @@ function parseTar(buffer, outputDir) {
     let offset = 0;
     const BLOCK_SIZE = 512;
 
+    let topLevelDir = null;
+    let isFirstFile = true;
+
     while (offset < buffer.length) {
         const header = buffer.slice(offset, offset + BLOCK_SIZE);
         offset += BLOCK_SIZE;
@@ -83,8 +86,28 @@ function parseTar(buffer, outputDir) {
         const fileData = buffer.slice(offset, offset + fileSize);
         offset += Math.ceil(fileSize / BLOCK_SIZE) * BLOCK_SIZE;
 
+        // 处理文件路径，去除顶级目录
+        if (isFirstFile) {
+            const parts = fileName.split('/');
+            if (parts.length > 1) {
+                topLevelDir = parts[0];
+            }
+            isFirstFile = false;
+        }
+
+        let relativePath = fileName;
+        if (topLevelDir) {
+            const prefix = `${topLevelDir}/`;
+            if (fileName.startsWith(prefix)) {
+                relativePath = fileName.slice(prefix.length);
+            }
+        }
+
+        // 如果相对路径为空（即顶级目录本身），则跳过
+        if (!relativePath) continue;
+
         // 创建目录结构
-        const fullPath = path.join(outputDir, fileName);
+        const fullPath = path.join(outputDir, relativePath);
         const dirName = path.dirname(fullPath);
         if (!fs.existsSync(dirName)) {
             fs.mkdirSync(dirName, { recursive: true });
@@ -107,7 +130,7 @@ function decompressTarBz2Sync(inputPath, outputDir) {
     // 解析并提取 TAR
     parseTar(tarBuffer, outputDir);
     // 删除原始文件
-    Utils.deletePath(filePath);
+    Utils.deletePath(inputPath);
 }
 
 
@@ -274,7 +297,8 @@ FileTask.prototype.run = function (callback) {
             try {
                 unzipFile(filePath, item.dir);
             } catch (e) {
-                Utils.error("Cannot unzip file: " +  error.message);
+                Utils.error("Cannot unzip file: " +  filePath);
+                console.error(e);
                 process.exit(1);
             }
         }
