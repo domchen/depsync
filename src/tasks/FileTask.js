@@ -53,18 +53,18 @@ function parseTar(buffer, outputDir) {
         const header = buffer.slice(offset, offset + BLOCK_SIZE);
         offset += BLOCK_SIZE;
 
-        // 检查是否为空块，两个连续的空块表示结束
+        // Check if it's an empty block, two consecutive empty blocks indicate the end
         const isEnd = header.every(byte => byte === 0);
         if (isEnd) break;
 
-        // 解析文件名
+        // Parse file name
         let fileName = '';
         for (let i = 0; i < 100; i++) {
             if (header[i] === 0) break;
             fileName += String.fromCharCode(header[i]);
         }
 
-        // 解析文件大小（Octal）
+        // Parse file size (Octal)
         let sizeOctal = '';
         for (let i = 124; i < 124 + 12; i++) {
             if (header[i] === 0) break;
@@ -72,21 +72,21 @@ function parseTar(buffer, outputDir) {
         }
         const fileSize = parseInt(sizeOctal.trim(), 8);
 
-        // 解析文件类型
+        // Parse file type
         const typeFlag = String.fromCharCode(header[156]);
 
-        // 忽略非普通文件
+        // Ignore non-regular files
         if (typeFlag !== '0' && typeFlag !== '\0') {
-            // 跳过该文件的数据部分
+            // Skip the data part of the file
             offset += Math.ceil(fileSize / BLOCK_SIZE) * BLOCK_SIZE;
             continue;
         }
 
-        // 提取文件数据
+        // Extract file data
         const fileData = buffer.slice(offset, offset + fileSize);
         offset += Math.ceil(fileSize / BLOCK_SIZE) * BLOCK_SIZE;
 
-        // 处理文件路径，去除顶级目录
+        // Handle file path, remove top-level directory
         if (isFirstFile) {
             const parts = fileName.split('/');
             if (parts.length > 1) {
@@ -103,33 +103,33 @@ function parseTar(buffer, outputDir) {
             }
         }
 
-        // 如果相对路径为空（即顶级目录本身），则跳过
+        // If the relative path is empty (i.e., the top-level directory itself), skip it
         if (!relativePath) continue;
 
-        // 创建目录结构
+        // Create directory structure
         const fullPath = path.join(outputDir, relativePath);
         const dirName = path.dirname(fullPath);
         if (!fs.existsSync(dirName)) {
             fs.mkdirSync(dirName, { recursive: true });
         }
 
-        // 写入文件
+        // Write file
         fs.writeFileSync(fullPath, fileData);
-        console.log(`解压文件: ${fullPath}`);
+        console.log(`Extracted file: ${fullPath}`);
     }
 }
 
-// 主解压函数
+// Main decompression function
 function decompressTarBz2Sync(inputPath, outputDir) {
-    // 读取 .tar.bz2 文件
+    // Read .tar.bz2 file
     const compressedData = fs.readFileSync(inputPath);
-    // 解压 Bzip2
+    // Decompress Bzip2
     const decompressedData = Compress.Bzip2.decompressFile(compressedData);
-    // 将解压后的数据转换为 Buffer
+    // Convert decompressed data to Buffer
     const tarBuffer = Buffer.from(decompressedData);
-    // 解析并提取 TAR
+    // Parse and extract TAR
     parseTar(tarBuffer, outputDir);
-    // 删除原始文件
+    // Delete original file
     Utils.deletePath(inputPath);
 }
 
@@ -137,7 +137,7 @@ function decompressTarBz2Sync(inputPath, outputDir) {
 function unzipFile(filePath, dir) {
     Utils.log("Unzipping: " + filePath);
 
-    // bz2 文件单独处理
+    // Handle bz2 files separately
     if (filePath.endsWith('.tar.bz2')) {
         decompressTarBz2Sync(filePath, dir);
         return;
