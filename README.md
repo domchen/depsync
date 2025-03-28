@@ -44,7 +44,7 @@ Here is an example of DEPS file:
 
 ```json
 {
-  "version": "1.3.2",
+  "version": "1.4.2",
   "vars": {
     "GIT_DOMAIN": "github.com",
     "SKIA_ROOT": "https://github.com/domchen/depsync/releases/download/1.0.1",
