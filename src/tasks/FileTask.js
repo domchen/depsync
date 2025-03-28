@@ -48,46 +48,105 @@ function parseTar(buffer, outputDir) {
 
     let topLevelDir = null;
     let isFirstFile = true;
+    // Used to store GNU LongLink filenames that span across blocks
+    let pendingLongFilename = null;
 
     while (offset < buffer.length) {
         const header = buffer.slice(offset, offset + BLOCK_SIZE);
         offset += BLOCK_SIZE;
 
-        // Check if it's an empty block, two consecutive empty blocks indicate the end
-        const isEnd = header.every(byte => byte === 0);
-        if (isEnd) break;
+        // Two consecutive zero-filled blocks mark the end of the archive
+        const isEndOfArchive = header.every(byte => byte === 0);
+        if (isEndOfArchive) break;
 
-        // Parse file name
-        let fileName = '';
-        for (let i = 0; i < 100; i++) {
-            if (header[i] === 0) break;
-            fileName += String.fromCharCode(header[i]);
-        }
-
-        // Parse file size (Octal)
-        let sizeOctal = '';
-        for (let i = 124; i < 124 + 12; i++) {
-            if (header[i] === 0) break;
-            sizeOctal += String.fromCharCode(header[i]);
-        }
-        const fileSize = parseInt(sizeOctal.trim(), 8);
-
-        // Parse file type
+        // Get the file type flag (position 156 in the header)
         const typeFlag = String.fromCharCode(header[156]);
 
-        // Ignore non-regular files
-        if (typeFlag !== '0' && typeFlag !== '\0') {
-            // Skip the data part of the file
+        // Handle GNU LongLink format (type 'L') for long filenames
+        if (typeFlag === 'L') {
+            // Extract the size of the LongLink data (stored in octal)
+            const longLinkSize = readOctalField(header, 124, 12);
+
+            // Read the LongLink data (excluding null terminator)
+            pendingLongFilename = '';
+            const filenameData = buffer.slice(offset, offset + longLinkSize - 1);
+            for (let i = 0; i < filenameData.length; i++) {
+                pendingLongFilename += String.fromCharCode(filenameData[i]);
+            }
+
+            // Skip to the next entry (the actual file entry follows the LongLink)
+            offset += Math.ceil(longLinkSize / BLOCK_SIZE) * BLOCK_SIZE;
+            continue;
+        }
+
+        // Extract the filename (use pendingLongFilename if available, or read from header)
+        let fileName = '';
+        if (pendingLongFilename) {
+            fileName = pendingLongFilename;
+            pendingLongFilename = null;  // Reset for next entry
+        } else {
+            // Standard TAR format: filename is in the first 100 bytes
+            for (let i = 0; i < 100; i++) {
+                if (header[i] === 0) break;  // Null-terminated string
+                fileName += String.fromCharCode(header[i]);
+            }
+        }
+
+        // Extract the file size (stored in octal from position 124)
+        const fileSize = readOctalField(header, 124, 12);
+
+        // Skip non-regular files and non-directories
+        // ('0' or '\0' = regular file, '5' = directory)
+        if (typeFlag !== '0' && typeFlag !== '\0' && typeFlag !== '5') {
+            // Skip the data blocks for this entry
             offset += Math.ceil(fileSize / BLOCK_SIZE) * BLOCK_SIZE;
             continue;
         }
 
-        // Extract file data
+        // Handle directory entries (type '5')
+        if (typeFlag === '5') {
+            // Process top-level directory information
+            if (isFirstFile) {
+                updateTopLevelDir();
+            }
+
+            // Create the directory structure
+            const relativePath = normalizeFilePath(fileName);
+            if (relativePath) {
+                const dirPath = path.join(outputDir, relativePath);
+                if (!fs.existsSync(dirPath)) {
+                    fs.mkdirSync(dirPath, { recursive: true });
+                }
+            }
+            continue;
+        }
+
+        // For regular files, extract the file data
         const fileData = buffer.slice(offset, offset + fileSize);
         offset += Math.ceil(fileSize / BLOCK_SIZE) * BLOCK_SIZE;
 
-        // Handle file path, remove top-level directory
+        // Process top-level directory information on first file
         if (isFirstFile) {
+            updateTopLevelDir();
+        }
+
+        // Create and write the file
+        const relativePath = normalizeFilePath(fileName);
+        if (!relativePath) continue;  // Skip if empty path
+
+        // Create directory structure for the file
+        const fullPath = path.join(outputDir, relativePath);
+        const dirName = path.dirname(fullPath);
+        if (!fs.existsSync(dirName)) {
+            fs.mkdirSync(dirName, { recursive: true });
+        }
+
+        // Write the file data
+        fs.writeFileSync(fullPath, fileData);
+        console.log(`Extracted file: ${fullPath}`);
+
+        // Helper function to update the top-level directory info
+        function updateTopLevelDir() {
             const parts = fileName.split('/');
             if (parts.length > 1) {
                 topLevelDir = parts[0];
@@ -95,27 +154,30 @@ function parseTar(buffer, outputDir) {
             isFirstFile = false;
         }
 
-        let relativePath = fileName;
-        if (topLevelDir) {
-            const prefix = `${topLevelDir}/`;
-            if (fileName.startsWith(prefix)) {
-                relativePath = fileName.slice(prefix.length);
+        // Helper function to normalize the file path
+        function normalizeFilePath(filePath) {
+            let relativePath = filePath;
+
+            // Remove top-level directory if it exists
+            if (topLevelDir) {
+                const prefix = `${topLevelDir}/`;
+                if (filePath.startsWith(prefix)) {
+                    relativePath = filePath.slice(prefix.length);
+                }
             }
+
+            // Skip empty paths (like the top-level directory itself)
+            return relativePath || '';
         }
+    }
 
-        // If the relative path is empty (i.e., the top-level directory itself), skip it
-        if (!relativePath) continue;
-
-        // Create directory structure
-        const fullPath = path.join(outputDir, relativePath);
-        const dirName = path.dirname(fullPath);
-        if (!fs.existsSync(dirName)) {
-            fs.mkdirSync(dirName, { recursive: true });
+    function readOctalField(header, start, length) {
+        let valueStr = '';
+        for (let i = start; i < start + length; i++) {
+            if (header[i] === 0) break;  // Field is null-terminated
+            valueStr += String.fromCharCode(header[i]);
         }
-
-        // Write file
-        fs.writeFileSync(fullPath, fileData);
-        console.log(`Extracted file: ${fullPath}`);
+        return parseInt(valueStr.trim(), 8);  // Parse as octal
     }
 }
 
