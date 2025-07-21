@@ -88,8 +88,6 @@ DepsTask.prototype.run = function (callback) {
     TaskRunner.runTasks(tasks, () => {
         Utils.deletePath(this.unfinishFileInGit);
         Utils.deletePath(this.unfinishFileInRoot);
-        Utils.deleteEmptyDir(path.dirname(this.unfinishFileInGit));
-        Utils.deleteEmptyDir(path.dirname(this.unfinishFileInRoot));
         callback && callback();
     });
 };
