@@ -40,9 +40,8 @@ function DepsTask(configFile, version, platform, nonRecursive) {
     this.platform = platform;
     this.nonRecursive = nonRecursive;
     let gitDir = path.join(path.dirname(this.configFile), ".git");
-    let projectRoot = path.dirname(this.configFile);
     this.unfinishFileInGit = path.join(gitDir, ".DEPS.unfinished");
-    this.unfinishFileInRoot = path.join(projectRoot, ".DEPS.unfinished");
+    this.unfinishFileInRoot = path.join(path.dirname(this.configFile), ".DEPS.unfinished");
     if (fs.existsSync(gitDir) && fs.lstatSync(gitDir).isDirectory()) {
         this.unfinishFile = this.unfinishFileInGit;
     } else {
