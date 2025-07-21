@@ -40,10 +40,12 @@ function DepsTask(configFile, version, platform, nonRecursive) {
     this.platform = platform;
     this.nonRecursive = nonRecursive;
     let gitDir = path.join(path.dirname(this.configFile), ".git");
-    if (fs.existsSync(gitDir) && !fs.lstatSync(gitDir).isDirectory()) {
-        this.unfinishFile = path.join(path.dirname(this.configFile), ".DEPS.unfinished");
+    this.unfinishFileInGit = path.join(gitDir, ".DEPS.unfinished");
+    this.unfinishFileInRoot = path.join(path.dirname(this.configFile), ".DEPS.unfinished");
+    if (fs.existsSync(gitDir) && fs.lstatSync(gitDir).isDirectory()) {
+        this.unfinishFile = this.unfinishFileInGit;
     } else {
-        this.unfinishFile = path.join(gitDir, ".DEPS.unfinished");
+        this.unfinishFile = this.unfinishFileInRoot;
     }
 }
 
@@ -61,7 +63,7 @@ DepsTask.prototype.run = function (callback) {
         if (repoDirty) {
             tasks.push(new RepoTask(item));
         }
-        if (repoDirty || fs.existsSync(this.unfinishFile)) {
+        if (repoDirty || fs.existsSync(this.unfinishFileInGit) || fs.existsSync(this.unfinishFileInRoot)) {
             let subRepoTask = new SubRepoTask(item);
             tasks.push(subRepoTask);
             if (!this.nonRecursive) {
@@ -84,8 +86,8 @@ DepsTask.prototype.run = function (callback) {
     tasks.push(subRepoTask);
     Utils.writeFile(this.unfinishFile, "depsync is syncing...");
     TaskRunner.runTasks(tasks, () => {
-        Utils.deletePath(this.unfinishFile);
-        Utils.deleteEmptyDir(path.dirname(this.unfinishFile));
+        Utils.deletePath(this.unfinishFileInGit);
+        Utils.deletePath(this.unfinishFileInRoot);
         callback && callback();
     });
 };
