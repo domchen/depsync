@@ -86,8 +86,10 @@ DepsTask.prototype.run = function (callback) {
     tasks.push(subRepoTask);
     Utils.writeFile(this.unfinishFile, "depsync is syncing...");
     TaskRunner.runTasks(tasks, () => {
-        Utils.deletePath(this.unfinishFile);
-        Utils.deleteEmptyDir(path.dirname(this.unfinishFile));
+        Utils.deletePath(this.unfinishFileInGit);
+        Utils.deletePath(this.unfinishFileInRoot);
+        Utils.deleteEmptyDir(path.dirname(this.unfinishFileInGit));
+        Utils.deleteEmptyDir(path.dirname(this.unfinishFileInRoot));
         callback && callback();
     });
 };
