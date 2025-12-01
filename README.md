@@ -92,13 +92,10 @@ Format: `'old_prefix->new_prefix'` for single mapping, or `'old1->new1,old2->new
 
 ```bash
 # Single mirror
-depsync --mirror 'https://github.com/->https://gitee.com/'
+depsync --mirror 'https://github.com/libpag/->https://gitee.com/pago/'
 
 # Multiple mirrors (comma-separated)
 depsync --mirror 'https://github.com/->https://gitee.com/,https://gitlab.com/->https://internal.company.com/'
-
-# With platform
-depsync mac --mirror 'https://github.com/->https://mirror.example.com/'
 ```
 
 The mirror option will replace URL prefixes for both repository URLs and file download URLs throughout the entire dependency tree.
