@@ -46,6 +46,12 @@ const optionDeclarations = [
         description: "Clean the repos and files of current directory that do not exist in the DEPS file."
     },
     {
+        name: "mirror",
+        shortName: "",
+        type: "string",
+        description: "Mirror repository URLs. Format: 'old1->new1,old2->new2'."
+    },
+    {
         name: "non-recursive",
         shortName: "",
         type: "boolean",
@@ -55,7 +61,7 @@ const optionDeclarations = [
         name: "version",
         shortName: "v",
         type: "boolean",
-        description: "Print depsync’s version."
+        description: "Print depsync's version."
     }
 ];
 

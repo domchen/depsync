@@ -50,13 +50,26 @@ function getHash(content) {
     return hash.digest('hex')
 }
 
-function parseFiles(files, vars, projectPath) {
+function applyUrlReplace(url, urlReplaceList) {
+    if (!urlReplaceList || urlReplaceList.length === 0) {
+        return url;
+    }
+    for (let replace of urlReplaceList) {
+        if (url.startsWith(replace.oldPrefix)) {
+            return replace.newPrefix + url.substring(replace.oldPrefix.length);
+        }
+    }
+    return url;
+}
+
+function parseFiles(files, vars, projectPath, urlReplaceList) {
     if (!files) {
         return [];
     }
     let list = [];
     for (let item of files) {
         item.url = formatString(item.url, vars);
+        item.url = applyUrlReplace(item.url, urlReplaceList);
         item.dir = formatString(item.dir, vars);
         item.hash = getHash(item.url);
         item.dir = path.resolve(projectPath, item.dir);
@@ -69,19 +82,20 @@ function parseFiles(files, vars, projectPath) {
         } else if (typeof unzip != "boolean") {
             item.unzip = false;
         }
-        item.timeout = item.timeout ? parseInt(item.timeout) : 15000; // Default to 15000 ms if not specified
+        item.timeout = item.timeout ? parseInt(item.timeout) : 15000;
         list.push(item);
     }
     return list;
 }
 
-function parseRepos(repos, vars, projectPath) {
+function parseRepos(repos, vars, projectPath, urlReplaceList) {
     if (!repos) {
         return [];
     }
     let list = [];
     for (let item of repos) {
         item.url = formatString(item.url, vars);
+        item.url = applyUrlReplace(item.url, urlReplaceList);
         item.commit = formatString(item.commit, vars);
         item.dir = formatString(item.dir, vars);
         item.dir = path.resolve(projectPath, item.dir);
@@ -139,7 +153,7 @@ function filterByPlatform(items, hostPlatform) {
     return list;
 }
 
-function parse(configFileName, version, platform) {
+function parse(configFileName, version, platform, urlReplaceList) {
     if (!fs.existsSync(configFileName)) {
         return null;
     }
@@ -165,9 +179,9 @@ function parse(configFileName, version, platform) {
         return null;
     }
     let files = filterByPlatform(data.files, platform);
-    config.files = parseFiles(files, data.vars, projectPath);
+    config.files = parseFiles(files, data.vars, projectPath, urlReplaceList);
     let repos = filterByPlatform(data.repos, platform);
-    config.repos = parseRepos(repos, data.vars, projectPath);
+    config.repos = parseRepos(repos, data.vars, projectPath, urlReplaceList);
     let actions = filterByPlatform(data.actions, platform);
     config.actions = parseActions(actions, data.vars, projectPath);
     return config;

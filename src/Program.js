@@ -84,6 +84,23 @@ function run(args) {
         printHelp();
         return;
     }
+    let urlReplaceList = null;
+    if (commandOptions["mirror"]) {
+        urlReplaceList = [];
+        let pairs = commandOptions["mirror"].split(",");
+        for (let pair of pairs) {
+            let parts = pair.split("->");
+            if (parts.length !== 2 || !parts[0] || !parts[1]) {
+                Utils.error("Invalid mirror format. Expected: 'old1->new1,old2->new2'\n");
+                Utils.error("Each pair should be: 'old_prefix->new_prefix'\n");
+                process.exit(1);
+            }
+            urlReplaceList.push({
+                oldPrefix: parts[0],
+                newPrefix: parts[1]
+            });
+        }
+    }
     let configFileName = "";
     if (commandOptions.project) {
         configFileName = path.join(commandOptions.project, "DEPS");
@@ -106,7 +123,7 @@ function run(args) {
             process.exit(0);
         });
     } else {
-        let task = new DepsTask(configFileName, version, commandOptions.platform, commandOptions["non-recursive"]);
+        let task = new DepsTask(configFileName, version, commandOptions.platform, commandOptions["non-recursive"], urlReplaceList);
         task.run(() => {
             process.exit(0);
         });

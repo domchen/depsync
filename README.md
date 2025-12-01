@@ -28,8 +28,11 @@ With all the advantages described above, all it takes is one straightforward com
 
 Run the following command in the directory with a DEPS file:
 ```
-depsync [platform]
+depsync [platform] [options]
 ```
+
+### Basic Usage
+
 For example, if you want to synchronize the mac platform, run:
 
 ```
@@ -40,11 +43,73 @@ If you don't pass any platform parameter, it will automatically choose the host 
 
 The available platform names are defined in the DEPS file, you can also define any other platform names as you want, such as `ios`, `android`... but only the `mac`, `win` and `linux` can be automatically chosen.
 
+### Command Line Options
+
+#### `-h, --help`
+Print help message with available options.
+
+```bash
+depsync --help
+```
+
+#### `-v, --version`
+Print the current version of depsync.
+
+```bash
+depsync --version
+```
+
+#### `-p, --project <directory>`
+Synchronize the project in the specified directory instead of the current directory.
+
+```bash
+depsync --project /path/to/your/project
+depsync mac --project /usr/local/myproject
+```
+
+#### `-c, --clean`
+Clean the repos and files in current directory that do not exist in the DEPS file. This helps remove outdated dependencies.
+
+```bash
+depsync --clean
+```
+
+#### `--non-recursive`
+Skip synchronizing the sub-projects. By default, depsync will recursively process DEPS files in all sub-repositories.
+
+```bash
+depsync --non-recursive
+depsync mac --non-recursive
+```
+
+#### `--mirror <mappings>`
+Redirect repository and file URLs to mirror sources. This is particularly useful when:
+- Using mirror repositories instead of original ones
+- Redirecting to internal corporate repositories
+- The replacement applies recursively to all sub-repositories
+
+Format: `'old_prefix->new_prefix'` for single mapping, or `'old1->new1,old2->new2'` for multiple mappings.
+
+```bash
+# Single mirror
+depsync --mirror 'https://github.com/->https://gitee.com/'
+
+# Multiple mirrors (comma-separated)
+depsync --mirror 'https://github.com/->https://gitee.com/,https://gitlab.com/->https://internal.company.com/'
+
+# With platform
+depsync mac --mirror 'https://github.com/->https://mirror.example.com/'
+```
+
+The mirror option will replace URL prefixes for both repository URLs and file download URLs throughout the entire dependency tree.
+
+### DEPS File Format
+
 Here is an example of DEPS file:
 
 ```json
 {
-  "version": "1.4.4",
+  "version": "1.4.5",
   "vars": {
     "GIT_DOMAIN": "github.com",
     "SKIA_ROOT": "https://github.com/domchen/depsync/releases/download/1.0.1",

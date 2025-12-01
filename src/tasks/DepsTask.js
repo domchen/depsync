@@ -34,11 +34,12 @@ const SubRepoTask = require("./SubRepoTask");
 const TaskRunner = require("./TaskRunner");
 const path = require("path");
 
-function DepsTask(configFile, version, platform, nonRecursive) {
+function DepsTask(configFile, version, platform, nonRecursive, urlReplaceList) {
     this.configFile = configFile;
     this.version = version;
     this.platform = platform;
     this.nonRecursive = nonRecursive;
+    this.urlReplaceList = urlReplaceList;
     let gitDir = path.join(path.dirname(this.configFile), ".git");
     this.unfinishFileInGit = path.join(gitDir, ".DEPS.unfinished");
     this.unfinishFileInRoot = path.join(path.dirname(this.configFile), ".DEPS.unfinished");
@@ -50,7 +51,7 @@ function DepsTask(configFile, version, platform, nonRecursive) {
 }
 
 DepsTask.prototype.run = function (callback) {
-    let config = Config.parse(this.configFile, this.version, this.platform);
+    let config = Config.parse(this.configFile, this.version, this.platform, this.urlReplaceList);
     if (!config) {
         callback && callback();
         return;
@@ -68,7 +69,7 @@ DepsTask.prototype.run = function (callback) {
             tasks.push(subRepoTask);
             if (!this.nonRecursive) {
                 let depsFile = path.join(item.dir, "DEPS");
-                tasks.push(new DepsTask(depsFile, this.version, this.platform, this.nonRecursive));
+                tasks.push(new DepsTask(depsFile, this.version, this.platform, this.nonRecursive, this.urlReplaceList));
             }
         }
     }
