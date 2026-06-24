@@ -43,6 +43,7 @@ SubRepoTask.prototype.run = function (callback) {
     }
     let modulesConfig = path.resolve(repoPath, ".gitmodules");
     if (fs.existsSync(modulesConfig)) {
+        cleanStaleSubmodules(repoPath, modulesConfig);
         Utils.exec("git submodule update --init --recursive --depth=1", repoPath, false);
     }
     let lfsConfig = path.resolve(repoPath, ".gitattributes");
@@ -66,5 +67,44 @@ SubRepoTask.prototype.run = function (callback) {
     }
     callback && callback();
 };
+
+function cleanStaleSubmodules(repoPath, modulesConfig) {
+    let content;
+    try {
+        content = fs.readFileSync(modulesConfig, "utf-8");
+    } catch (e) {
+        return;
+    }
+    let pathRegex = /^\s*path\s*=\s*(.+)/gm;
+    let match;
+    while ((match = pathRegex.exec(content)) !== null) {
+        let subPath = match[1].trim();
+        let subDir = path.resolve(repoPath, subPath);
+        if (!fs.existsSync(subDir)) {
+            continue;
+        }
+        let subGit = path.join(subDir, ".git");
+        let hasValidGit = false;
+        if (fs.existsSync(subGit)) {
+            try {
+                let stat = fs.lstatSync(subGit);
+                if (stat.isDirectory()) {
+                    hasValidGit = true;
+                } else if (stat.isFile()) {
+                    let link = fs.readFileSync(subGit, "utf-8").trim();
+                    let target = link.replace(/^gitdir:\s*/, "");
+                    let absTarget = path.resolve(subDir, target);
+                    hasValidGit = fs.existsSync(absTarget);
+                }
+            } catch (e) {
+            }
+        }
+        if (!hasValidGit) {
+            Utils.log("【depsync】cleaning stale submodule: " + subPath);
+            Utils.deletePath(subDir);
+            Utils.createDirectory(subDir);
+        }
+    }
+}
 
 module.exports = SubRepoTask;
