@@ -106,7 +106,7 @@ Here is an example of DEPS file:
 
 ```json
 {
-  "version": "1.4.5",
+  "version": "1.4.6",
   "vars": {
     "GIT_DOMAIN": "github.com",
     "SKIA_ROOT": "https://github.com/domchen/depsync/releases/download/1.0.1",
