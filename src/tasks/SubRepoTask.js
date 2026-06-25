@@ -43,7 +43,7 @@ SubRepoTask.prototype.run = function (callback) {
     }
     let modulesConfig = path.resolve(repoPath, ".gitmodules");
     if (fs.existsSync(modulesConfig)) {
-        Utils.exec("git submodule update --init --recursive --depth=1", repoPath, false);
+        updateSubmodules(repoPath, modulesConfig);
     }
     let lfsConfig = path.resolve(repoPath, ".gitattributes");
     if (fs.existsSync(lfsConfig)) {
@@ -67,4 +67,42 @@ SubRepoTask.prototype.run = function (callback) {
     callback && callback();
 };
 
+function updateSubmodules(repoPath, modulesConfig) {
+    let cmd = "git submodule update --init --recursive --depth=1";
+    if (Utils.execStatus(cmd, repoPath) === 0) {
+        return;
+    }
+    Utils.log("【depsync】submodule update failed, cleaning stale submodules...");
+    let subPaths = parseSubmodulePaths(modulesConfig);
+    for (let subPath of subPaths) {
+        let quoted = process.platform === "win32" ? '"' + subPath.replace(/"/g, '\\"') + '"' : "'" + subPath.replace(/'/g, "'\\''") + "'";
+        Utils.execStatus("git submodule deinit -f -- " + quoted, repoPath);
+        let moduleCacheDir = path.resolve(repoPath, ".git", "modules", subPath);
+        if (fs.existsSync(moduleCacheDir)) {
+            Utils.deletePath(moduleCacheDir);
+        }
+        let subDir = path.resolve(repoPath, subPath);
+        if (fs.existsSync(subDir)) {
+            Utils.deletePath(subDir);
+        }
+    }
+    Utils.exec(cmd, repoPath, false);
+}
+
+function parseSubmodulePaths(modulesConfig) {
+    let paths = [];
+    try {
+        let content = fs.readFileSync(modulesConfig, "utf-8");
+        let pathRegex = /^\s*path\s*=\s*(.+)/gm;
+        let match;
+        while ((match = pathRegex.exec(content)) !== null) {
+            paths.push(match[1].trim());
+        }
+    } catch (e) {
+        Utils.error("【depsync】failed to parse .gitmodules: " + e.message);
+    }
+    return paths;
+}
+
 module.exports = SubRepoTask;
+

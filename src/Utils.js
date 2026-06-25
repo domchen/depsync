@@ -177,17 +177,16 @@ function error(message) {
     process.stderr.write(text);
 }
 
-function exec(cmd, dir, quiet) {
-    if (!dir) {
-        dir = process.cwd();
-    } else {
-        dir = path.resolve(dir);
-    }
-    let options = {
+function spawnOptions(dir) {
+    return {
         shell: os.platform() === "win32" ? "cmd.exe" : true,
-        cwd: dir,
+        cwd: dir ? path.resolve(dir) : process.cwd(),
         env: process.env
-    }
+    };
+}
+
+function exec(cmd, dir, quiet) {
+    let options = spawnOptions(dir);
 
     if (!quiet) {
         options.stdio = "inherit";
@@ -204,22 +203,23 @@ function exec(cmd, dir, quiet) {
 }
 
 function execSafe(cmd, dir) {
-    if (!dir) {
-        dir = process.cwd();
-    } else {
-        dir = path.resolve(dir);
-    }
-    let options = {
-        shell: os.platform() === "win32" ? "cmd.exe" : true,
-        cwd: dir,
-        env: process.env
-    }
-
     try {
-        let result = childProcess.spawnSync(cmd, options);
+        let result = childProcess.spawnSync(cmd, spawnOptions(dir));
         return result.stdout.toString();
     } catch (e) {
         return "";
+    }
+}
+
+function execStatus(cmd, dir) {
+    try {
+        let result = childProcess.spawnSync(cmd, spawnOptions(dir));
+        if (result.status === null) {
+            return 1;
+        }
+        return result.status;
+    } catch (e) {
+        return 1;
     }
 }
 
@@ -259,6 +259,7 @@ exports.readFile = readFile;
 exports.writeFile = writeFile;
 exports.exec = exec;
 exports.execSafe = execSafe;
+exports.execStatus = execStatus;
 exports.log = log;
 exports.error = error;
 exports.compareVersion = compareVersion;
